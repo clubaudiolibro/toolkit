@@ -206,6 +206,15 @@ Solo tema chiaro, accento `#b0506e` (colore della categoria Benessere).
   così le voci restano leggibili e del colore giusto anche dopo un'eliminazione definitiva.
 - **Cosa allenare oggi:** l'allenamento che segue, nell'ordine della lista, l'ultimo completato (ciclico);
   le attività non contano.
+- **Timer di riposo:** pulsante sempre visibile; il tempo si calcola dall'orario di fine salvato sul telefono
+  (`localStorage`, chiave `gymlog.timer`), quindi resta esatto anche se la pagina va in pausa. Preset in
+  `gym_settings.timer_presets` (secondi). Nessun suono né vibrazione.
+- **Schermo sempre acceso:** Screen Wake Lock API (`js/wakelock.js`) mentre un allenamento o il timer sono aperti.
+- **Installazione (PWA):** `apps/gymlog/manifest.json` + `service-worker.js` (cache `gymlog-app-*`, prima la rete;
+  non tocca mai i dati di Supabase). **`CACHE_VERSION`** va incrementata quando si aggiungono, rinominano o
+  tolgono file dell'app, aggiornando l'elenco `CORE`.
+- **Statistiche:** allenamenti del mese, media a settimana delle ultime 4 settimane, media stelline degli
+  ultimi 30 giorni (le attività non contano).
 - **Trascinamento:** SortableJS 1.15.7 (MIT) copiato in `apps/gymlog/vendor/`, si trascina solo dalla maniglia.
 - **Cestino:** esercizi, gruppi, allenamenti, attività eliminati restano con `deleted_at` e si possono
   ripristinare; si svuota solo a mano.

@@ -17,6 +17,10 @@ import * as today from './js/views/today.js';
 import * as run from './js/views/run.js';
 import * as diary from './js/views/diary.js';
 import * as activities from './js/views/activities.js';
+import * as stats from './js/views/stats.js';
+import * as settings from './js/views/settings.js';
+import { initTimer } from './js/timer.js';
+import { initInstall } from './js/install.js';
 
 const TABS = [
   { id: 'oggi', label: 'Oggi', icon: 'today' },
@@ -42,10 +46,13 @@ const ROUTES = [
   [/^altro\/(muscoli|attrezzi)$/, lists, 'altro'],
   [/^altro\/cestino$/, trash, 'altro'],
   [/^altro\/attivita$/, activities, 'altro'],
+  [/^altro\/statistiche$/, stats, 'altro'],
+  [/^altro\/impostazioni$/, settings, 'altro'],
 ];
 
 const $ = id => document.getElementById(id);
 let leaveGuard = null;      // funzione che restituisce true se ci sono modifiche non salvate
+let cleanup = null;         // funzione chiamata quando si lascia la schermata corrente
 let currentHash = null;
 let ready = false;
 
@@ -87,6 +94,7 @@ function makeCtx(params, path) {
     },
     setActions(...nodes) { const box = $('top-right'); box.textContent = ''; nodes.forEach(n => n && box.appendChild(n)); },
     setLeaveGuard(fn) { leaveGuard = fn; },
+    onLeave(fn) { cleanup = fn; },
     go(hash) { location.hash = hash; },
     rerender() { route(true); },
   };
@@ -120,6 +128,7 @@ async function route(force = false) {
 
   currentHash = hash;
   leaveGuard = null;
+  if (cleanup) { try { cleanup(); } catch (e) { /* niente */ } cleanup = null; }
   setActiveTab(match.tab);
   const ctx = makeCtx(match.params, path);
   ctx.setBack(null);
@@ -164,7 +173,14 @@ function watchConnection() {
   update();
 }
 
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
+  navigator.serviceWorker.register('./service-worker.js').catch(e => console.warn('Service worker non registrato', e));
+}
+
 async function start() {
+  registerServiceWorker();
+  initInstall();
   renderTabs();
   watchConnection();
   const view = $('view');
@@ -183,6 +199,7 @@ async function start() {
     return;
   }
   ready = true;
+  initTimer();
   window.addEventListener('hashchange', () => route());
   window.addEventListener('beforeunload', e => { if (leaveGuard && leaveGuard()) { e.preventDefault(); e.returnValue = ''; } });
   route();

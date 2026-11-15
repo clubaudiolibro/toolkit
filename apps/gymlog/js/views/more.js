@@ -27,7 +27,7 @@ export function render(ctx) {
     el('ul', { class: 'list' },
       row({ href: '#/altro/cestino', ico: 'trash', title: 'Cestino', sub: nTrash ? (nTrash === 1 ? '1 elemento' : nTrash + ' elementi') : 'Vuoto' }),
       row({ ico: 'backup', title: 'Backup', sub: 'In arrivo nella fase 5', disabled: true }),
-      row({ ico: 'stats', title: 'Statistiche', sub: 'In arrivo nella fase 4', disabled: true }),
-      row({ ico: 'settings', title: 'Impostazioni', sub: 'In arrivo nella fase 4', disabled: true })),
+      row({ href: '#/altro/statistiche', ico: 'stats', title: 'Statistiche', sub: 'Mese, media settimanale, stelline' }),
+      row({ href: '#/altro/impostazioni', ico: 'settings', title: 'Impostazioni', sub: 'Installa sulla Home, timer' })),
     el('p', { class: 'about', text: 'GymLog v' + APP_VERSION }));
 }
