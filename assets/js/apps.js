@@ -73,7 +73,7 @@ const APPS = [
     url: "./apps/gymlog/index.html",
     category: "benessere",
     featured: false,
-    version: "1.4",
+    version: "1.5",
     tags: ["Palestra", "Telefono", "Cloud"],
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>'
   }
@@ -86,6 +86,7 @@ const APPS = [
           version, text (descrizione brevissima).
    ===================================================================== */
 const CHANGELOG = [
+  { date: "2026-11-15", app: "gymlog", version: "1.5", text: "Misure corporee (Altro → Misure corporee): peso e circonferenze del lato destro con sagoma e istruzioni, un grafico, storico e promemoria dopo 15 giorni (peso) e 30 (circonferenze). Richiede di rilanciare supabase/gymlog.sql (schema 4)." },
   { date: "2026-11-15", app: "gymlog", version: "1.4", text: "Fase 5: backup (esporta in JSON e CSV per Excel, ripristino sicuro) con avviso se manca da più di 30 giorni." },
   { date: "2026-11-15", app: "gymlog", version: "1.3", text: "Fase 4: timer di riposo sempre visibile con preset, schermo sempre acceso, installazione sulla Home, statistiche." },
   { date: "2026-11-15", app: "gymlog", version: "1.2", text: "Fase 3: esecuzione dell'allenamento, «Allenamento completato» con stelline, diario a calendario/elenco, attività (es. Corsa), cosa allenare oggi." },

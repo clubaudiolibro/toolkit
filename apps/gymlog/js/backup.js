@@ -9,7 +9,7 @@
  * File CSV: solo da leggere in Excel (separatore ";", UTF-8 con BOM).
  */
 import { run, fetchAll, uid } from './db.js';
-import { APP_VERSION, SCHEMA_VERSION } from './config.js';
+import { APP_VERSION, SCHEMA_VERSION, MEASURES } from './config.js';
 import { state, loadAll } from './store.js';
 import { fmtDate, todayIso } from './ui.js';
 import { isIOS, isStandalone } from './install.js';
@@ -26,6 +26,7 @@ const TABLES = {
   workouts: ['gym_workouts', 'created_at'],
   workout_items: ['gym_workout_items', 'created_at'],
   diary: ['gym_diary', 'created_at'],
+  measurements: ['gym_measurements', 'created_at'],
 };
 
 export const BACKUP_MAX_DAYS = 30;
@@ -45,7 +46,7 @@ export function daysSinceBackup() {
 
 /** Serve l'avviso? Solo se c'è qualcosa da salvare e il backup manca o è più vecchio di 30 giorni. */
 export function backupOverdue() {
-  const hasData = state.exercises.length || state.workouts.length || state.diary.length;
+  const hasData = state.exercises.length || state.workouts.length || state.diary.length || state.measurements.length;
   if (!hasData) return false;
   const d = daysSinceBackup();
   return d == null || d > BACKUP_MAX_DAYS;
@@ -90,7 +91,7 @@ function countsOf(data) {
   const n = k => (Array.isArray(data[k]) ? data[k].length : 0);
   return {
     exercises: n('exercises'), groups: n('groups'), workouts: n('workouts'),
-    diary: n('diary'), activity_types: n('activity_types'),
+    diary: n('diary'), activity_types: n('activity_types'), measurements: n('measurements'),
     muscles: n('muscles'), equipment: n('equipment'),
   };
 }
@@ -174,6 +175,12 @@ export function buildCsv() {
   for (const d of diary) {
     lines.push(csvLine([fmtDate(d.day), d.kind === 'activity' ? 'Attività' : 'Allenamento', d.name, d.stars || '']));
   }
+
+  lines.push('', 'MISURE CORPOREE');
+  const rightSide = new Set(['biceps', 'thigh', 'calf']);   // misurati sul lato destro
+  lines.push(csvLine(['Data', ...MEASURES.map(m => m.label + (rightSide.has(m.key) ? ' dx' : '') + ' (' + m.unit + ')')]));
+  const meas = state.measurements.slice().sort((a, b) => b.day.localeCompare(a.day));
+  for (const m of meas) lines.push(csvLine([fmtDate(m.day), ...MEASURES.map(x => num(m[x.key]))]));
 
   lines.push('', 'ESERCIZI');
   lines.push(csvLine(['Nome', 'Gruppi muscolari', 'Attrezzo', 'Efficacia', 'Descrizione', 'Video', 'Note', 'Nel cestino']));

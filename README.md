@@ -192,7 +192,7 @@ Solo tema chiaro, accento `#b0506e` (colore della categoria Benessere).
 - **Database:** `supabase/gymlog.sql` (una volta sola nel SQL Editor; rilanciabile senza perdere dati).
   Tutte le tabelle hanno il prefisso `gym_`, RLS attiva (ognuno vede solo le proprie righe) e nessun
   accesso per `anon`. La versione dello schema è in `gym_schema_version()` e in `SCHEMA_VERSION` di
-  `apps/gymlog/js/config.js`: se il database è più vecchio l'app mostra «Database da aggiornare» (versione attuale: 3).
+  `apps/gymlog/js/config.js`: se il database è più vecchio l'app mostra «Database da aggiornare» (versione attuale: 4).
 - **Voci predefinite** (gruppi muscolari e attrezzi): le inserisce l'app al primo avvio.
 - **Accesso:** usa il login unico (`Toolbox.getClient()`), nessun dato di collegamento duplicato.
 - **Salvataggio:** ogni modifica va subito su Supabase; se manca la rete compare un avviso e la modifica
@@ -210,6 +210,12 @@ Solo tema chiaro, accento `#b0506e` (colore della categoria Benessere).
   (`localStorage`, chiave `gymlog.timer`), quindi resta esatto anche se la pagina va in pausa. Preset in
   `gym_settings.timer_presets` (secondi). Nessun suono né vibrazione.
 - **Schermo sempre acceso:** Screen Wake Lock API (`js/wakelock.js`) mentre un allenamento o il timer sono aperti.
+- **Misure corporee** (Altro → Misure corporee, tabella `gym_measurements`, una riga per giorno): peso in kg e
+  circonferenze in cm del lato destro (vita, spalle, petto, bicipite, coscia, polpaccio), tutti i campi facoltativi.
+  Il form ha una sagoma SVG con i punti di misura e una «i» per ciascuno con le istruzioni; un solo grafico a linea
+  (il peso è la media settimanale), storico modificabile. Promemoria in Oggi e in Altro se il peso manca da più di
+  15 giorni o le circonferenze da più di 30 (`MEASURE_REMIND` in `config.js`). Incluse in backup JSON e CSV; il ripristino
+  di un backup senza misure (fatto prima della v1.5) non le tocca.
 - **Installazione (PWA):** `apps/gymlog/manifest.json` + `service-worker.js` (cache `gymlog-app-*`, prima la rete;
   non tocca mai i dati di Supabase). **`CACHE_VERSION`** va incrementata quando si aggiungono, rinominano o
   tolgono file dell'app, aggiornando l'elenco `CORE`.
