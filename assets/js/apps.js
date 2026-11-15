@@ -16,6 +16,7 @@
 const CATEGORIES = {
   audiolibri: { label: "Audiolibri", color: "#2f6f62" },
   chitarra:   { label: "Chitarra",   color: "#c2632b" },
+  benessere:  { label: "Benessere",  color: "#b0506e" },
   film:       { label: "Film",       color: "#8a3fb8" },
   utility:    { label: "Utility",    color: "#3b6fd1" }
 };
@@ -64,6 +65,17 @@ const APPS = [
     version: "1.0",
     tags: ["Tag", "Immagini / PDF", "PC + tablet"],
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="3" height="13" rx="1"/><rect x="8.5" y="7" width="3" height="11" rx="1"/><path d="M3 21h18"/><path d="M17 16V6l3 1"/><circle cx="15.5" cy="16" r="1.6"/></svg>'
+  },
+  {
+    id: "gymlog",
+    title: "GymLog",
+    description: "Registro degli allenamenti in palestra: esercizi, gruppi, allenamenti e pesi sempre aggiornati.",
+    url: "./apps/gymlog/index.html",
+    category: "benessere",
+    featured: false,
+    version: "1.0",
+    tags: ["Palestra", "Telefono", "Cloud"],
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>'
   }
 ];
 
@@ -74,6 +86,8 @@ const APPS = [
           version, text (descrizione brevissima).
    ===================================================================== */
 const CHANGELOG = [
+  { date: "2026-11-15", app: "gymlog", version: "1.0", text: "Prima versione (fase 1): database degli esercizi, gruppi muscolari e attrezzi personalizzabili, cestino." },
+  { date: "2026-11-15", app: "toolbox", version: "1.3", text: "Nuova sezione Benessere con GymLog." },
   { date: "2026-11-14", app: "toolbox", version: "1.2", text: "Accesso unico con email e password dalla home: vale per tutte le app." },
   { date: "2026-11-14", app: "audiolibri", version: "1.1", text: "Carica i dati dal cloud (sincronizzati ogni notte da Notion). Il CSV manuale resta disponibile." },
   { date: "2026-11-14", app: "citazioni", version: "1.1", text: "Si apre dopo l'accesso dalla home." },

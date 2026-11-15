@@ -6,6 +6,7 @@ Web app statica (PWA installabile) che raccoglie:
 - **Citazioni in Immagine** — `apps/citazioni/` (accetta CSV e Excel .xlsx; template in `apps/citazioni/template-citazioni.xlsx`)
 - **Postcard audiolibri** — `apps/postcard-audiolibri/`
 - **TabShelf** — `apps/tabshelf/` (libreria di tablature con tag e filtri: si carica dal PC, si studia dal tablet; dati e file su Supabase. Guida completa più sotto)
+- **GymLog** — `apps/gymlog/` (registro degli allenamenti in palestra, pensato per il telefono; dati su Supabase. Vedi «GymLog» più sotto)
 - `apps/tablature/` — contiene solo il reindirizzamento a TabShelf della vecchia *Guitar Tab Library* (vedi «Vecchia Guitar Tab Library»)
 
 Nessun build step e nessun framework: HTML, CSS e JavaScript (moduli ES) con percorsi relativi.
@@ -182,3 +183,20 @@ Il **ripristino da backup non è ancora disponibile**: il formato qui sopra è p
 e un `service-worker.js` che sostituisce il vecchio service worker cache-first: si attiva subito, cancella
 le cache con prefisso `gtl-`, si deregistra e ricarica le schede aperte. I vecchi dati rimasti in IndexedDB
 non vengono toccati né importati.
+
+## GymLog
+
+Registro degli allenamenti in palestra (sezione Benessere), pensato prima per il telefono.
+Solo tema chiaro, accento `#b0506e` (colore della categoria Benessere).
+
+- **Database:** `supabase/gymlog.sql` (una volta sola nel SQL Editor; rilanciabile senza perdere dati).
+  Tutte le tabelle hanno il prefisso `gym_`, RLS attiva (ognuno vede solo le proprie righe) e nessun
+  accesso per `anon`. La versione dello schema è in `gym_schema_version()` e in `SCHEMA_VERSION` di
+  `apps/gymlog/js/config.js`: se il database è più vecchio l'app mostra «Database da preparare».
+- **Voci predefinite** (gruppi muscolari e attrezzi): le inserisce l'app al primo avvio.
+- **Accesso:** usa il login unico (`Toolbox.getClient()`), nessun dato di collegamento duplicato.
+- **Salvataggio:** ogni modifica va subito su Supabase; se manca la rete compare un avviso e la modifica
+  non viene salvata (non c'è una coda offline).
+- **Cestino:** esercizi (poi gruppi, allenamenti, attività) eliminati restano con `deleted_at` e si possono
+  ripristinare; si svuota solo a mano.
+- `APP_VERSION` in `apps/gymlog/js/config.js` va tenuta uguale alla versione di `gymlog` in `assets/js/apps.js`.
