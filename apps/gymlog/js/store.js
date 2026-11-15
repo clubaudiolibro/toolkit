@@ -504,3 +504,20 @@ export function suggestedWorkout() {
   }
   return { workout: list[0], after: null };
 }
+
+/* ---------------------------------------------------------------------
+   Impostazioni
+   --------------------------------------------------------------------- */
+
+export const DEFAULT_PRESETS = [45, 60, 90, 120];
+
+/** Preset del timer in secondi, ordinati. */
+export function timerPresets() {
+  const p = state.settings && Array.isArray(state.settings.timer_presets) ? state.settings.timer_presets : DEFAULT_PRESETS;
+  return p.map(Number).filter(n => n > 0).sort((a, b) => a - b);
+}
+export async function saveTimerPresets(list) {
+  const clean = [...new Set(list.map(n => Math.round(Number(n))).filter(n => n > 0 && n <= 3600))].sort((a, b) => a - b);
+  await run(c => c.from('gym_settings').update({ timer_presets: clean, updated_at: nowIso() }).eq('user_id', uid()));
+  state.settings.timer_presets = clean;
+}

@@ -6,6 +6,7 @@ import { el, icon, toast, confirmDialog, todayIso, fmtDate } from '../ui.js';
 import { getWorkout, workoutItems, getGroup, groupItems, getExercise, updateExerciseNotes, addDiaryEntry, setDiaryStars } from '../store.js';
 import { valuesEditor, actionMenu, askStars } from '../components.js';
 import { getChecked, setChecked, clearProgress } from '../progress.js';
+import { hold, release } from '../wakelock.js';
 
 /** Note dell'esercizio, modificabili da qui (si salvano subito e valgono ovunque). */
 function notesEditor(ex) {
@@ -46,6 +47,8 @@ export async function render(ctx) {
     return;
   }
   ctx.setTitle(w.name);
+  hold('run');                                   // schermo sempre acceso durante l'allenamento
+  ctx.onLeave(() => release('run'));
   ctx.setActions(el('button', { type: 'button', class: 'icon-btn', 'aria-label': 'Altre azioni', on: { click: () => actionMenu(w.name, [
     { label: 'Modifica l\'allenamento', icon: 'edit', run: () => ctx.go('#/allenamenti/' + w.id) },
     { label: 'Togli tutte le spunte', icon: 'restore', run: async () => {
