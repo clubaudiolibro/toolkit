@@ -4,7 +4,6 @@ import { el, icon } from '../ui.js';
 const INFO = {
   oggi: { title: 'Oggi', icon: 'today', text: 'Qui comparirà l\'allenamento suggerito per oggi.', phase: 3 },
   diario: { title: 'Diario', icon: 'diary', text: 'Qui comparirà il calendario degli allenamenti.', phase: 3 },
-  allenamenti: { title: 'Allenamenti', icon: 'workouts', text: 'Qui creerai gruppi di esercizi e allenamenti.', phase: 2 },
 };
 
 export function render(ctx) {
@@ -15,5 +14,5 @@ export function render(ctx) {
     icon(info.icon, 'ico'),
     el('strong', { text: 'In arrivo' }),
     el('p', { text: info.text + ' (fase ' + info.phase + ')' }),
-    el('a', { class: 'btn btn-primary', href: '#/esercizi', text: 'Vai agli esercizi' })));
+    el('a', { class: 'btn btn-primary', href: '#/allenamenti', text: 'Vai agli allenamenti' })));
 }

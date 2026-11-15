@@ -197,6 +197,10 @@ Solo tema chiaro, accento `#b0506e` (colore della categoria Benessere).
 - **Accesso:** usa il login unico (`Toolbox.getClient()`), nessun dato di collegamento duplicato.
 - **Salvataggio:** ogni modifica va subito su Supabase; se manca la rete compare un avviso e la modifica
   non viene salvata (non c'è una coda offline).
-- **Cestino:** esercizi (poi gruppi, allenamenti, attività) eliminati restano con `deleted_at` e si possono
+- **Valori:** serie, ripetizioni e peso valgono per l'esercizio dentro un gruppo (`gym_group_items`, condivisi da
+  tutti gli allenamenti che usano il gruppo) o come esercizio singolo dentro un allenamento (`gym_workout_items`).
+  Ogni casella si salva da sola; se manca la rete resta bordata di rosso e riprova appena la rete torna.
+- **Trascinamento:** SortableJS 1.15.7 (MIT) copiato in `apps/gymlog/vendor/`, si trascina solo dalla maniglia.
+- **Cestino:** esercizi, gruppi, allenamenti (poi attività) eliminati restano con `deleted_at` e si possono
   ripristinare; si svuota solo a mano.
 - `APP_VERSION` in `apps/gymlog/js/config.js` va tenuta uguale alla versione di `gymlog` in `assets/js/apps.js`.

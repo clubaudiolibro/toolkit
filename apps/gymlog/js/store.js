@@ -11,6 +11,10 @@ export const state = {
   equipment: [],        // { id, name, sort_order }
   exercises: [],        // tutti, anche quelli nel cestino (deleted_at)
   exMuscles: new Map(), // exercise_id -> Set(muscle_id)
+  groups: [],           // gruppi di esercizi (anche nel cestino)
+  groupItems: [],       // esercizi dentro i gruppi, con i valori
+  workouts: [],         // allenamenti (anche nel cestino)
+  workoutItems: [],     // elementi degli allenamenti
   settings: null,
 };
 
@@ -49,12 +53,20 @@ async function ensureSeed() {
 
 export async function loadAll() {
   await ensureSeed();
-  const [muscles, equipment, exercises, links] = await Promise.all([
+  const [muscles, equipment, exercises, links, groups, groupItems, workouts, workoutItems] = await Promise.all([
     fetchAll('gym_muscles', 'id,name,sort_order,created_at'),
     fetchAll('gym_equipment', 'id,name,sort_order,created_at'),
     fetchAll('gym_exercises'),
     fetchAll('gym_exercise_muscles', 'exercise_id,muscle_id', 'exercise_id'),
+    fetchAll('gym_groups'),
+    fetchAll('gym_group_items'),
+    fetchAll('gym_workouts'),
+    fetchAll('gym_workout_items'),
   ]);
+  state.groups = groups;
+  state.groupItems = groupItems.map(numify);
+  state.workouts = workouts;
+  state.workoutItems = workoutItems.map(numify);
   state.muscles = sortList(muscles);
   state.equipment = sortList(equipment);
   state.exercises = exercises;
@@ -147,6 +159,8 @@ export async function purgeExercise(id) {
   await run(c => c.from('gym_exercises').delete().eq('id', id), { action: "l'eliminazione" });
   state.exercises = state.exercises.filter(e => e.id !== id);
   state.exMuscles.delete(id);
+  state.groupItems = state.groupItems.filter(i => i.exercise_id !== id);
+  state.workoutItems = state.workoutItems.filter(i => i.exercise_id !== id);
 }
 
 /* ---------------------------------------------------------------------
@@ -198,13 +212,200 @@ export async function deleteListItem(kind, id) {
 
 /** Elementi nel cestino, dal più recente. type: 'exercise' (poi anche gruppi, allenamenti, attività). */
 export function trashItems() {
-  const items = state.exercises.filter(e => e.deleted_at)
-    .map(e => ({ type: 'exercise', id: e.id, name: e.name, deleted_at: e.deleted_at }));
+  const pick = (list, type) => list.filter(e => e.deleted_at)
+    .map(e => ({ type, id: e.id, name: e.name, deleted_at: e.deleted_at }));
+  const items = [
+    ...pick(state.exercises, 'exercise'),
+    ...pick(state.groups, 'group'),
+    ...pick(state.workouts, 'workout'),
+  ];
   return items.sort((a, b) => b.deleted_at.localeCompare(a.deleted_at));
 }
 
 const TRASH_OPS = {
   exercise: { restore: restoreExercise, purge: purgeExercise },
+  group: { restore: restoreGroup, purge: purgeGroup },
+  workout: { restore: restoreWorkout, purge: purgeWorkout },
 };
 export const restoreItem = item => TRASH_OPS[item.type].restore(item.id);
 export const purgeItem = item => TRASH_OPS[item.type].purge(item.id);
+
+/* ---------------------------------------------------------------------
+   Valori (serie, ripetizioni, peso, riscaldamento)
+   --------------------------------------------------------------------- */
+
+export const VALUE_FIELDS = ['sets', 'reps', 'weight', 'wu_sets', 'wu_reps', 'wu_weight'];
+
+/** PostgREST può restituire i numeric come testo: li riporta a numero. */
+function numify(row) {
+  for (const k of ['weight', 'wu_weight']) if (row[k] != null) row[k] = Number(row[k]);
+  return row;
+}
+
+/** Riscaldamento presente? */
+export const hasWarmup = it => it.wu_sets != null || it.wu_reps != null || it.wu_weight != null;
+
+/** Salva subito uno o più valori di un esercizio dentro un gruppo ('group') o un allenamento ('workout'). */
+export async function updateItemValues(kind, itemId, patch) {
+  const table = kind === 'group' ? 'gym_group_items' : 'gym_workout_items';
+  const list = kind === 'group' ? state.groupItems : state.workoutItems;
+  const clean = {};
+  for (const k of VALUE_FIELDS) if (k in patch) clean[k] = patch[k];
+  await run(c => c.from(table).update(clean).eq('id', itemId));
+  Object.assign(list.find(i => i.id === itemId), clean);
+}
+
+/** Aggiorna le posizioni secondo l'ordine di ids (solo le righe cambiate). */
+async function savePositions(table, list, ids) {
+  const changed = [];
+  ids.forEach((id, i) => {
+    const row = list.find(x => x.id === id);
+    if (row && row.position !== (i + 1) * 10) changed.push({ row, position: (i + 1) * 10 });
+  });
+  await Promise.all(changed.map(ch => run(c => c.from(table).update({ position: ch.position }).eq('id', ch.row.id),
+    { action: "il salvataggio dell'ordine" })));
+  changed.forEach(ch => { ch.row.position = ch.position; });
+}
+const nextPos = list => list.reduce((m, x) => Math.max(m, x.position || 0), 0) + 10;
+const byPos = (a, b) => (a.position - b.position) || String(a.created_at).localeCompare(String(b.created_at));
+
+/* ---------------------------------------------------------------------
+   Gruppi di esercizi
+   --------------------------------------------------------------------- */
+
+export const activeGroups = () => state.groups.filter(g => !g.deleted_at).sort(byName);
+export const getGroup = id => state.groups.find(g => g.id === id) || null;
+
+/** Esercizi del gruppo (solo quelli non nel cestino), in ordine. */
+export function groupItems(groupId) {
+  return state.groupItems
+    .filter(i => i.group_id === groupId && isLiveExercise(i.exercise_id))
+    .sort(byPos);
+}
+const isLiveExercise = id => { const e = getExercise(id); return !!(e && !e.deleted_at); };
+
+/** Allenamenti (non nel cestino) che usano il gruppo. */
+export function groupUsage(groupId) {
+  const ids = new Set(state.workoutItems.filter(i => i.group_id === groupId).map(i => i.workout_id));
+  return activeWorkouts().filter(w => ids.has(w.id));
+}
+
+/** Gruppi (non nel cestino) e allenamenti che contengono l'esercizio. */
+export function exerciseUsage(exId) {
+  const groups = activeGroups().filter(g => state.groupItems.some(i => i.group_id === g.id && i.exercise_id === exId));
+  const workouts = activeWorkouts().filter(w => state.workoutItems.some(i => i.workout_id === w.id && i.exercise_id === exId));
+  return { groups, workouts };
+}
+
+export async function createGroup(name) {
+  const saved = await run(c => c.from('gym_groups').insert({ id: newId(), name: name.trim() }).select().single());
+  state.groups.push(saved);
+  return saved;
+}
+export async function renameGroup(id, name) {
+  await run(c => c.from('gym_groups').update({ name: name.trim() }).eq('id', id));
+  getGroup(id).name = name.trim();
+}
+export async function trashGroup(id) {
+  const t = nowIso();
+  await run(c => c.from('gym_groups').update({ deleted_at: t }).eq('id', id));
+  getGroup(id).deleted_at = t;
+}
+export async function restoreGroup(id) {
+  await run(c => c.from('gym_groups').update({ deleted_at: null }).eq('id', id), { action: 'il ripristino' });
+  getGroup(id).deleted_at = null;
+}
+export async function purgeGroup(id) {
+  await run(c => c.from('gym_groups').delete().eq('id', id), { action: "l'eliminazione" });
+  state.groups = state.groups.filter(g => g.id !== id);
+  state.groupItems = state.groupItems.filter(i => i.group_id !== id);
+  state.workoutItems = state.workoutItems.filter(i => i.group_id !== id);
+}
+
+export async function addExerciseToGroup(groupId, exId) {
+  const row = { id: newId(), group_id: groupId, exercise_id: exId,
+    position: nextPos(state.groupItems.filter(i => i.group_id === groupId)) };
+  const saved = numify(await run(c => c.from('gym_group_items').insert(row).select().single()));
+  state.groupItems.push(saved);
+  return saved;
+}
+export async function removeGroupItem(itemId) {
+  await run(c => c.from('gym_group_items').delete().eq('id', itemId), { action: "l'eliminazione" });
+  state.groupItems = state.groupItems.filter(i => i.id !== itemId);
+}
+export const reorderGroupItems = ids => savePositions('gym_group_items', state.groupItems, ids);
+
+/* ---------------------------------------------------------------------
+   Allenamenti
+   --------------------------------------------------------------------- */
+
+/** Allenamenti non nel cestino, nell'ordine della lista (usato anche per il suggerimento di oggi). */
+export const activeWorkouts = () => state.workouts.filter(w => !w.deleted_at).sort(byPos);
+export const getWorkout = id => state.workouts.find(w => w.id === id) || null;
+
+/** Elementi dell'allenamento, in ordine, senza quelli che puntano a gruppi/esercizi nel cestino. */
+export function workoutItems(workoutId) {
+  return state.workoutItems
+    .filter(i => i.workout_id === workoutId)
+    .filter(i => (i.kind === 'group' ? (getGroup(i.group_id) && !getGroup(i.group_id).deleted_at) : isLiveExercise(i.exercise_id)))
+    .sort(byPos);
+}
+
+export async function createWorkout(name) {
+  const row = { id: newId(), name: name.trim(), position: nextPos(state.workouts) };
+  const saved = await run(c => c.from('gym_workouts').insert(row).select().single());
+  state.workouts.push(saved);
+  return saved;
+}
+export async function renameWorkout(id, name) {
+  await run(c => c.from('gym_workouts').update({ name: name.trim() }).eq('id', id));
+  getWorkout(id).name = name.trim();
+}
+export const reorderWorkouts = ids => savePositions('gym_workouts', state.workouts, ids);
+
+/** Duplica un allenamento: stessi gruppi (condivisi) e copie degli esercizi singoli con i loro valori. */
+export async function duplicateWorkout(id, name) {
+  const src = getWorkout(id);
+  const copy = await run(c => c.from('gym_workouts').insert({ id: newId(), name: name.trim(), position: nextPos(state.workouts) }).select().single());
+  state.workouts.push(copy);
+  const items = state.workoutItems.filter(i => i.workout_id === src.id).sort(byPos).map(i => {
+    const r = { id: newId(), workout_id: copy.id, position: i.position, kind: i.kind, group_id: i.group_id, exercise_id: i.exercise_id };
+    for (const k of VALUE_FIELDS) r[k] = i[k];
+    return r;
+  });
+  if (items.length) {
+    const saved = await run(c => c.from('gym_workout_items').insert(items).select());
+    state.workoutItems.push(...saved.map(numify));
+  }
+  return copy;
+}
+
+export async function trashWorkout(id) {
+  const t = nowIso();
+  await run(c => c.from('gym_workouts').update({ deleted_at: t }).eq('id', id));
+  getWorkout(id).deleted_at = t;
+}
+export async function restoreWorkout(id) {
+  await run(c => c.from('gym_workouts').update({ deleted_at: null }).eq('id', id), { action: 'il ripristino' });
+  getWorkout(id).deleted_at = null;
+}
+export async function purgeWorkout(id) {
+  await run(c => c.from('gym_workouts').delete().eq('id', id), { action: "l'eliminazione" });
+  state.workouts = state.workouts.filter(w => w.id !== id);
+  state.workoutItems = state.workoutItems.filter(i => i.workout_id !== id);
+}
+
+/** Aggiunge un gruppo o un esercizio singolo all'allenamento. */
+export async function addWorkoutItem(workoutId, kind, refId) {
+  const row = { id: newId(), workout_id: workoutId, kind,
+    group_id: kind === 'group' ? refId : null, exercise_id: kind === 'exercise' ? refId : null,
+    position: nextPos(state.workoutItems.filter(i => i.workout_id === workoutId)) };
+  const saved = numify(await run(c => c.from('gym_workout_items').insert(row).select().single()));
+  state.workoutItems.push(saved);
+  return saved;
+}
+export async function removeWorkoutItem(itemId) {
+  await run(c => c.from('gym_workout_items').delete().eq('id', itemId), { action: "l'eliminazione" });
+  state.workoutItems = state.workoutItems.filter(i => i.id !== itemId);
+}
+export const reorderWorkoutItems = ids => savePositions('gym_workout_items', state.workoutItems, ids);
