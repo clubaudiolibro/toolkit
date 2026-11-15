@@ -214,3 +214,40 @@ export function exerciseCard({ exercise, kind, item, sortable, onRemove, removeL
         on: { click: onRemove } }, icon('close')) : null),
     valuesEditor(kind, item));
 }
+
+/* ---------------------------------------------------------------------
+   Stelline (1-5 intere)
+   --------------------------------------------------------------------- */
+
+/** Testo delle stelline: ★★★☆☆ (stringa vuota se nessuna). */
+export const starsText = n => (n ? '★'.repeat(n) + '☆'.repeat(5 - n) : '');
+
+/** Cinque stelle grandi da toccare. onChange(n) riceve 1-5. */
+export function starsInput(value, onChange) {
+  const box = el('div', { class: 'stars', role: 'radiogroup', 'aria-label': 'Valutazione' });
+  const draw = v => {
+    box.textContent = '';
+    for (let i = 1; i <= 5; i++) {
+      box.appendChild(el('button', {
+        type: 'button', class: 'star' + (v && i <= v ? ' on' : ''), role: 'radio', 'aria-checked': String(v === i),
+        'aria-label': i === 1 ? '1 stella' : i + ' stelle', text: '★',
+        on: { click: () => { draw(i); onChange(i); } },
+      }));
+    }
+  };
+  draw(value || 0);
+  return box;
+}
+
+/** Foglio per scegliere le stelline. Restituisce 1-5, 0 per "togli", oppure null se saltato/chiuso. */
+export function askStars({ title, text, value = null, skipLabel = 'Salta', allowClear = false }) {
+  return customSheet((sheet, close) => {
+    sheet.append(
+      el('h2', { class: 'sheet-title', text: title }),
+      text ? el('p', { class: 'sheet-text', text }) : null,
+      starsInput(value, n => setTimeout(() => close(n), 180)),
+      el('div', { class: 'sheet-actions' },
+        allowClear && value ? el('button', { type: 'button', class: 'btn', text: 'Togli stelle', on: { click: () => close(0) } }) : null,
+        el('button', { type: 'button', class: 'btn', text: skipLabel, on: { click: () => close(null) } })));
+  }).then(v => (typeof v === 'number' ? v : null));
+}

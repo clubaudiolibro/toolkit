@@ -10,10 +10,13 @@ import * as exerciseEdit from './js/views/exercise-edit.js';
 import * as more from './js/views/more.js';
 import * as lists from './js/views/lists.js';
 import * as trash from './js/views/trash.js';
-import * as soon from './js/views/soon.js';
 import * as workouts from './js/views/workouts.js';
 import * as workoutEdit from './js/views/workout-edit.js';
 import * as groupEdit from './js/views/group-edit.js';
+import * as today from './js/views/today.js';
+import * as run from './js/views/run.js';
+import * as diary from './js/views/diary.js';
+import * as activities from './js/views/activities.js';
 
 const TABS = [
   { id: 'oggi', label: 'Oggi', icon: 'today' },
@@ -25,8 +28,9 @@ const TABS = [
 
 /** Rotte: [espressione, modulo, tab]. I gruppi catturati diventano params. */
 const ROUTES = [
-  [/^oggi$/, soon, 'oggi'],
-  [/^diario$/, soon, 'diario'],
+  [/^oggi$/, today, 'oggi'],
+  [/^esegui\/([0-9a-f-]{36})$/, run, 'oggi'],
+  [/^diario$/, diary, 'diario'],
   [/^allenamenti$/, workouts, 'allenamenti'],
   [/^allenamenti\/gruppi$/, workouts, 'allenamenti'],
   [/^allenamenti\/gruppi\/([0-9a-f-]{36})$/, groupEdit, 'allenamenti'],
@@ -37,6 +41,7 @@ const ROUTES = [
   [/^altro$/, more, 'altro'],
   [/^altro\/(muscoli|attrezzi)$/, lists, 'altro'],
   [/^altro\/cestino$/, trash, 'altro'],
+  [/^altro\/attivita$/, activities, 'altro'],
 ];
 
 const $ = id => document.getElementById(id);
@@ -135,12 +140,14 @@ async function route(force = false) {
   if (!force) window.scrollTo(0, 0);
 }
 
-function showSetup() {
+function showSetup(current) {
   const view = $('view');
   view.textContent = '';
   view.appendChild(el('div', { class: 'card setup', style: 'padding:18px' },
-    el('h2', { style: 'margin-top:0', text: 'Database da preparare' }),
-    el('p', { text: 'Prima di usare GymLog bisogna creare le sue tabelle su Supabase (una volta sola):' }),
+    el('h2', { style: 'margin-top:0', text: current ? 'Database da aggiornare' : 'Database da preparare' }),
+    el('p', { text: current
+      ? 'Questa versione di GymLog ha bisogno di un piccolo aggiornamento del database. I tuoi dati restano tutti: basta rieseguire lo stesso file.'
+      : 'Prima di usare GymLog bisogna creare le sue tabelle su Supabase (una volta sola):' }),
     el('ol', {},
       el('li', { html: 'Apri <strong>supabase.com</strong>, entra nel tuo progetto e scegli <strong>SQL Editor</strong> nel menu a sinistra.' }),
       el('li', { html: 'Premi <strong>New query</strong>.' }),
@@ -164,7 +171,7 @@ async function start() {
   try {
     if (!(await initDb())) return;            // rimandato alla home per il login
     const v = await schemaVersion();
-    if (v == null || v < SCHEMA_VERSION) { showSetup(); return; }
+    if (v == null || v < SCHEMA_VERSION) { showSetup(v); return; }
     await loadAll();
   } catch (e) {
     console.error(e);
