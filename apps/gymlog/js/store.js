@@ -15,6 +15,8 @@ export const state = {
   groupItems: [],       // esercizi dentro i gruppi, con i valori
   workouts: [],         // allenamenti (anche nel cestino)
   workoutItems: [],     // elementi degli allenamenti
+  activities: [],       // tipi di attività (es. Corsa), anche nel cestino
+  diary: [],            // voci del diario
   settings: null,
 };
 
@@ -53,7 +55,7 @@ async function ensureSeed() {
 
 export async function loadAll() {
   await ensureSeed();
-  const [muscles, equipment, exercises, links, groups, groupItems, workouts, workoutItems] = await Promise.all([
+  const [muscles, equipment, exercises, links, groups, groupItems, workouts, workoutItems, activities, diary] = await Promise.all([
     fetchAll('gym_muscles', 'id,name,sort_order,created_at'),
     fetchAll('gym_equipment', 'id,name,sort_order,created_at'),
     fetchAll('gym_exercises'),
@@ -62,7 +64,11 @@ export async function loadAll() {
     fetchAll('gym_group_items'),
     fetchAll('gym_workouts'),
     fetchAll('gym_workout_items'),
+    fetchAll('gym_activity_types'),
+    fetchAll('gym_diary'),
   ]);
+  state.activities = activities;
+  state.diary = diary.map(tagEntry);
   state.groups = groups;
   state.groupItems = groupItems.map(numify);
   state.workouts = workouts;
@@ -218,6 +224,7 @@ export function trashItems() {
     ...pick(state.exercises, 'exercise'),
     ...pick(state.groups, 'group'),
     ...pick(state.workouts, 'workout'),
+    ...pick(state.activities, 'activity'),
   ];
   return items.sort((a, b) => b.deleted_at.localeCompare(a.deleted_at));
 }
@@ -226,6 +233,7 @@ const TRASH_OPS = {
   exercise: { restore: restoreExercise, purge: purgeExercise },
   group: { restore: restoreGroup, purge: purgeGroup },
   workout: { restore: restoreWorkout, purge: purgeWorkout },
+  activity: { restore: restoreActivity, purge: purgeActivity },
 };
 export const restoreItem = item => TRASH_OPS[item.type].restore(item.id);
 export const purgeItem = item => TRASH_OPS[item.type].purge(item.id);
@@ -409,3 +417,90 @@ export async function removeWorkoutItem(itemId) {
   state.workoutItems = state.workoutItems.filter(i => i.id !== itemId);
 }
 export const reorderWorkoutItems = ids => savePositions('gym_workout_items', state.workoutItems, ids);
+
+/* ---------------------------------------------------------------------
+   Tipi di attività (es. Corsa): non sono allenamenti e non contano per il suggerimento
+   --------------------------------------------------------------------- */
+
+export const activeActivities = () => state.activities.filter(a => !a.deleted_at).sort(byName);
+export const getActivity = id => state.activities.find(a => a.id === id) || null;
+
+export async function createActivity(name) {
+  const saved = await run(c => c.from('gym_activity_types').insert({ id: newId(), name: name.trim() }).select().single());
+  state.activities.push(saved);
+  return saved;
+}
+export async function renameActivity(id, name) {
+  await run(c => c.from('gym_activity_types').update({ name: name.trim() }).eq('id', id));
+  getActivity(id).name = name.trim();
+}
+export async function trashActivity(id) {
+  const t = nowIso();
+  await run(c => c.from('gym_activity_types').update({ deleted_at: t }).eq('id', id));
+  getActivity(id).deleted_at = t;
+}
+export async function restoreActivity(id) {
+  await run(c => c.from('gym_activity_types').update({ deleted_at: null }).eq('id', id), { action: 'il ripristino' });
+  getActivity(id).deleted_at = null;
+}
+export async function purgeActivity(id) {
+  await run(c => c.from('gym_activity_types').delete().eq('id', id), { action: "l'eliminazione" });
+  state.activities = state.activities.filter(a => a.id !== id);
+  for (const d of state.diary) if (d.activity_id === id) d.activity_id = null;   // il diario conserva il nome
+}
+
+/* ---------------------------------------------------------------------
+   Diario
+   --------------------------------------------------------------------- */
+
+/** Voce di attività (true) o di allenamento (false)? Il tipo è salvato nella voce (colonna kind). */
+export const isActivityEntry = d => d.kind === 'activity';
+
+function tagEntry(d) {
+  if (!d.kind) d.kind = d.activity_id ? 'activity' : 'workout';
+  return d;
+}
+
+/** Voci in ordine cronologico inverso (più recente prima). */
+export function diarySorted() {
+  return state.diary.map(tagEntry).slice().sort((a, b) => b.day.localeCompare(a.day) || String(b.created_at).localeCompare(String(a.created_at)));
+}
+export const diaryByDay = day => diarySorted().filter(d => d.day === day).reverse();
+
+/** Ultimi n allenamenti completati (le attività non contano). */
+export const lastWorkouts = (n = 3) => diarySorted().filter(d => !isActivityEntry(d)).slice(0, n);
+
+/**
+ * Nuova voce. entry: { day, workout_id } oppure { day, activity_id }; il nome viene salvato al momento.
+ */
+export async function addDiaryEntry({ day, workout_id = null, activity_id = null, stars = null }) {
+  const name = workout_id ? getWorkout(workout_id).name : getActivity(activity_id).name;
+  const row = { id: newId(), day, workout_id, activity_id, name, stars, kind: activity_id ? 'activity' : 'workout' };
+  const saved = await run(c => c.from('gym_diary').insert(row).select().single());
+  state.diary.push(saved);
+  return saved;
+}
+export async function setDiaryStars(id, stars) {
+  await run(c => c.from('gym_diary').update({ stars }).eq('id', id));
+  state.diary.find(d => d.id === id).stars = stars;
+}
+export async function deleteDiaryEntry(id) {
+  await run(c => c.from('gym_diary').delete().eq('id', id), { action: "l'eliminazione" });
+  state.diary = state.diary.filter(d => d.id !== id);
+}
+
+/**
+ * Allenamento suggerito per oggi: quello che segue, nell'ordine della lista, l'ultimo completato
+ * (ciclico: dopo l'ultimo si riparte dal primo). Si guarda l'ultimo completato che è ancora nella lista.
+ * Restituisce { workout, after } (after = voce del diario di riferimento, o null).
+ */
+export function suggestedWorkout() {
+  const list = activeWorkouts();
+  if (!list.length) return null;
+  const done = diarySorted().filter(d => !isActivityEntry(d) && d.workout_id);
+  for (const d of done) {
+    const i = list.findIndex(w => w.id === d.workout_id);
+    if (i >= 0) return { workout: list[(i + 1) % list.length], after: d };
+  }
+  return { workout: list[0], after: null };
+}

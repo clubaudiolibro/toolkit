@@ -1,6 +1,6 @@
 /** more.js — sezione "Altro": statistiche, backup, cestino, liste personali, impostazioni. */
 import { el, icon } from '../ui.js';
-import { state, trashItems } from '../store.js';
+import { state, trashItems, activeActivities } from '../store.js';
 import { APP_VERSION } from '../config.js';
 
 function row({ href, ico, title, sub, disabled }) {
@@ -22,7 +22,7 @@ export function render(ctx) {
     el('ul', { class: 'list' },
       row({ href: '#/altro/muscoli', ico: 'list', title: 'Gruppi muscolari', sub: state.muscles.length + ' voci' }),
       row({ href: '#/altro/attrezzi', ico: 'dumbbell', title: 'Attrezzi', sub: state.equipment.length + ' voci' }),
-      row({ ico: 'today', title: 'Attività (es. Corsa)', sub: 'In arrivo nella fase 3', disabled: true })),
+      row({ href: '#/altro/attivita', ico: 'today', title: 'Attività (es. Corsa)', sub: activeActivities().length + ' voci' })),
     el('h2', { class: 'section-title', text: 'Dati' }),
     el('ul', { class: 'list' },
       row({ href: '#/altro/cestino', ico: 'trash', title: 'Cestino', sub: nTrash ? (nTrash === 1 ? '1 elemento' : nTrash + ' elementi') : 'Vuoto' }),

@@ -14,7 +14,9 @@
 -- Le voci predefinite (gruppi muscolari, attrezzi) le inserisce l'app al
 -- primo avvio, perché qui nel SQL Editor non c'è un utente collegato.
 --
--- Versione dello schema: 1 (vedi gym_schema_version e apps/gymlog/js/config.js)
+-- Versione dello schema: 2 (vedi gym_schema_version e apps/gymlog/js/config.js)
+--   v2: gym_diary.kind ('workout' | 'activity'), così una voce resta "attività" anche
+--       se il tipo di attività viene eliminato definitivamente dal cestino
 -- =====================================================================
 
 
@@ -138,6 +140,10 @@ create table if not exists public.gym_diary (
   created_at  timestamptz not null default now()
 );
 
+-- v2: tipo di voce (aggiunto anche ai database creati con la versione 1)
+alter table public.gym_diary add column if not exists kind text not null default 'workout';
+update public.gym_diary set kind = 'activity' where activity_id is not null and kind <> 'activity';
+
 -- Impostazioni (una riga per utente)
 create table if not exists public.gym_settings (
   user_id         uuid primary key default auth.uid() references auth.users (id) on delete cascade,
@@ -158,6 +164,10 @@ begin
     alter table public.gym_workout_items add constraint gym_workout_items_kind_check
       check ((kind = 'group' and group_id is not null and exercise_id is null)
           or (kind = 'exercise' and exercise_id is not null and group_id is null));
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'gym_diary_kind_check') then
+    alter table public.gym_diary add constraint gym_diary_kind_check
+      check (kind in ('workout', 'activity'));
   end if;
   if not exists (select 1 from pg_constraint where conname = 'gym_diary_stars_check') then
     alter table public.gym_diary add constraint gym_diary_stars_check
@@ -215,7 +225,7 @@ create or replace function public.gym_schema_version()
 returns integer
 language sql immutable
 set search_path = ''
-as $$ select 1 $$;
+as $$ select 2 $$;
 
 revoke all on function public.gym_schema_version() from public, anon;
 grant execute on function public.gym_schema_version() to authenticated;

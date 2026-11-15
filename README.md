@@ -200,7 +200,13 @@ Solo tema chiaro, accento `#b0506e` (colore della categoria Benessere).
 - **Valori:** serie, ripetizioni e peso valgono per l'esercizio dentro un gruppo (`gym_group_items`, condivisi da
   tutti gli allenamenti che usano il gruppo) o come esercizio singolo dentro un allenamento (`gym_workout_items`).
   Ogni casella si salva da sola; se manca la rete resta bordata di rosso e riprova appena la rete torna.
+- **Esecuzione:** le spunte dell'allenamento in corso stanno solo nel telefono (`localStorage`, chiave
+  `gymlog.progress`); «Allenamento completato» registra la voce nel diario con la data di oggi e le azzera.
+- **Diario:** `gym_diary` conserva il nome al momento e il tipo (`kind`: `workout` | `activity`, schema v2),
+  così le voci restano leggibili e del colore giusto anche dopo un'eliminazione definitiva.
+- **Cosa allenare oggi:** l'allenamento che segue, nell'ordine della lista, l'ultimo completato (ciclico);
+  le attività non contano.
 - **Trascinamento:** SortableJS 1.15.7 (MIT) copiato in `apps/gymlog/vendor/`, si trascina solo dalla maniglia.
-- **Cestino:** esercizi, gruppi, allenamenti (poi attività) eliminati restano con `deleted_at` e si possono
+- **Cestino:** esercizi, gruppi, allenamenti, attività eliminati restano con `deleted_at` e si possono
   ripristinare; si svuota solo a mano.
 - `APP_VERSION` in `apps/gymlog/js/config.js` va tenuta uguale alla versione di `gymlog` in `assets/js/apps.js`.
