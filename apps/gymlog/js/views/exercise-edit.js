@@ -1,6 +1,6 @@
 /** exercise-edit.js — scheda di un esercizio (nuovo o esistente). */
 import { el, icon, toast, confirmDialog, promptDialog } from '../ui.js';
-import { state, getExercise, createExercise, updateExercise, trashExercise, addListItem } from '../store.js';
+import { state, getExercise, createExercise, updateExercise, trashExercise, addListItem, exerciseUsage } from '../store.js';
 import { EFFICACY } from '../config.js';
 
 /** Restituisce l'URL se è un indirizzo web valido (aggiunge https:// se manca), altrimenti null. */
@@ -155,6 +155,11 @@ export function render(ctx) {
     el('div', { class: 'field' }, el('span', { class: 'field-label', text: 'Note' }), notes),
     el('div', { class: 'form-actions' }, saveBtn));
 
+  if (ex) {
+    const u = exerciseUsage(ex.id);
+    const where = [...u.groups.map(g => 'gruppo ' + g.name), ...u.workouts.map(w => w.name)];
+    ctx.view.appendChild(el('p', { class: 'hint', text: where.length ? 'Usato in: ' + where.join(', ') + '.' : 'Non ancora usato in gruppi o allenamenti.' }));
+  }
   ctx.view.appendChild(form);
 
   if (ex) {

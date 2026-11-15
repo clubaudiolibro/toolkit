@@ -73,7 +73,7 @@ const APPS = [
     url: "./apps/gymlog/index.html",
     category: "benessere",
     featured: false,
-    version: "1.0",
+    version: "1.1",
     tags: ["Palestra", "Telefono", "Cloud"],
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>'
   }
@@ -86,6 +86,7 @@ const APPS = [
           version, text (descrizione brevissima).
    ===================================================================== */
 const CHANGELOG = [
+  { date: "2026-11-15", app: "gymlog", version: "1.1", text: "Fase 2: gruppi di esercizi e allenamenti con serie, ripetizioni, peso e riscaldamento; duplica; ordine trascinabile." },
   { date: "2026-11-15", app: "gymlog", version: "1.0", text: "Prima versione (fase 1): database degli esercizi, gruppi muscolari e attrezzi personalizzabili, cestino." },
   { date: "2026-11-15", app: "toolbox", version: "1.3", text: "Nuova sezione Benessere con GymLog." },
   { date: "2026-11-14", app: "toolbox", version: "1.2", text: "Accesso unico con email e password dalla home: vale per tutte le app." },

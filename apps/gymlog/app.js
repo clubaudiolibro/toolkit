@@ -11,6 +11,9 @@ import * as more from './js/views/more.js';
 import * as lists from './js/views/lists.js';
 import * as trash from './js/views/trash.js';
 import * as soon from './js/views/soon.js';
+import * as workouts from './js/views/workouts.js';
+import * as workoutEdit from './js/views/workout-edit.js';
+import * as groupEdit from './js/views/group-edit.js';
 
 const TABS = [
   { id: 'oggi', label: 'Oggi', icon: 'today' },
@@ -24,7 +27,10 @@ const TABS = [
 const ROUTES = [
   [/^oggi$/, soon, 'oggi'],
   [/^diario$/, soon, 'diario'],
-  [/^allenamenti$/, soon, 'allenamenti'],
+  [/^allenamenti$/, workouts, 'allenamenti'],
+  [/^allenamenti\/gruppi$/, workouts, 'allenamenti'],
+  [/^allenamenti\/gruppi\/([0-9a-f-]{36})$/, groupEdit, 'allenamenti'],
+  [/^allenamenti\/([0-9a-f-]{36})$/, workoutEdit, 'allenamenti'],
   [/^esercizi$/, exercises, 'esercizi'],
   [/^esercizi\/nuovo$/, exerciseEdit, 'esercizi'],
   [/^esercizi\/([0-9a-f-]{36})$/, exerciseEdit, 'esercizi'],
