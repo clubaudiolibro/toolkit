@@ -4,6 +4,7 @@ import { state, trashItems, activeActivities } from '../store.js';
 import { APP_VERSION } from '../config.js';
 import { backupBanner } from './backup.js';
 import { backupOverdue, backupStatusText } from '../backup.js';
+import { measureBanner, measureSubtitle } from './measures.js';
 
 function row({ href, ico, title, sub, disabled }) {
   const inner = [
@@ -20,6 +21,8 @@ export function render(ctx) {
   ctx.setTitle('Altro');
   const nTrash = trashItems().length;
   if (backupOverdue()) ctx.view.appendChild(backupBanner());
+  const mb = measureBanner();
+  if (mb) ctx.view.appendChild(mb);
   ctx.view.append(
     el('h2', { class: 'section-title', text: 'Liste personali' }),
     el('ul', { class: 'list' },
@@ -31,6 +34,7 @@ export function render(ctx) {
       row({ href: '#/altro/cestino', ico: 'trash', title: 'Cestino', sub: nTrash ? (nTrash === 1 ? '1 elemento' : nTrash + ' elementi') : 'Vuoto' }),
       row({ href: '#/altro/backup', ico: 'backup', title: 'Backup', sub: backupStatusText() }),
       row({ href: '#/altro/statistiche', ico: 'stats', title: 'Statistiche', sub: 'Mese, media settimanale, stelline' }),
+      row({ href: '#/altro/misure', ico: 'ruler', title: 'Misure corporee', sub: measureSubtitle() }),
       row({ href: '#/altro/impostazioni', ico: 'settings', title: 'Impostazioni', sub: 'Installa sulla Home, timer' })),
     el('p', { class: 'about', text: 'GymLog v' + APP_VERSION }));
 }

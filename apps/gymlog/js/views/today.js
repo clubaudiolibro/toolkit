@@ -6,6 +6,7 @@ import { inProgress } from '../progress.js';
 import { workoutCount } from './workouts.js';
 import { backupBanner } from './backup.js';
 import { backupOverdue } from '../backup.js';
+import { measureBanner } from './measures.js';
 
 const DAYS = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
 
@@ -14,6 +15,8 @@ export function render(ctx) {
   const now = new Date();
   ctx.view.appendChild(el('p', { class: 'today-date', text: DAYS[now.getDay()] + ' ' + fmtDate(now) }));
   if (backupOverdue()) ctx.view.appendChild(backupBanner());
+  const mb = measureBanner();
+  if (mb) ctx.view.appendChild(mb);
 
   const list = activeWorkouts();
   if (!list.length) {

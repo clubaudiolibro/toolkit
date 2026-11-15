@@ -17,6 +17,7 @@ function summary(c) {
     plural(c.workouts, 'allenamento', 'allenamenti'),
     plural(c.diary, 'voce di diario', 'voci di diario'),
     plural(c.activity_types, 'attività', 'attività'),
+    plural(c.measurements || 0, 'misura corporea', 'misure corporee'),
   ].join(', ');
 }
 
@@ -84,7 +85,7 @@ export function render(ctx) {
     restoreBtn.lastChild.textContent = 'Ripristina da un file…';
     setBusy(false);
 
-    const hasCurrent = current.counts.exercises || current.counts.workouts || current.counts.diary;
+    const hasCurrent = current.counts.exercises || current.counts.workouts || current.counts.diary || current.counts.measurements;
     const ok = await confirmDialog({
       title: 'Sostituire tutti i dati?',
       text: 'Backup del ' + fmtDate(backup.created_at) + ': ' + summary(backup.counts) + '.\n\n'
@@ -121,9 +122,9 @@ export function render(ctx) {
     backupBanner({ link: false }),
     el('div', { class: 'card pad' },
       el('h2', { class: 'card-title' }, icon('backup'), 'Esporta'),
-      el('p', { text: 'Scarica sul telefono un file con tutti i tuoi dati (esercizi, gruppi, allenamenti, diario, attività, liste, impostazioni, cestino compreso). Conservalo in un posto sicuro, per esempio Google Drive o iCloud.' }),
+      el('p', { text: 'Scarica sul telefono un file con tutti i tuoi dati (esercizi, gruppi, allenamenti, diario, attività, misure corporee, liste, impostazioni, cestino compreso). Conservalo in un posto sicuro, per esempio Google Drive o iCloud.' }),
       el('div', { class: 'stack' }, exportBtn),
-      el('p', { class: 'small', text: 'Vuoi solo consultare i dati? La tabella per Excel contiene diario, esercizi, gruppi e allenamenti con i pesi. Non serve per il ripristino.' }),
+      el('p', { class: 'small', text: 'Vuoi solo consultare i dati? La tabella per Excel contiene diario, misure corporee, esercizi, gruppi e allenamenti con i pesi. Non serve per il ripristino.' }),
       el('div', { class: 'stack' }, csvBtn)),
     el('div', { class: 'card pad' },
       el('h2', { class: 'card-title' }, icon('restore'), 'Ripristina'),

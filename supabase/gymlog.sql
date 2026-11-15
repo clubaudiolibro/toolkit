@@ -7,17 +7,19 @@
 -- prefisso gym_).
 --
 -- Contiene:
---   * tabelle di GymLog (esercizi, gruppi, allenamenti, diario, impostazioni)
+--   * tabelle di GymLog (esercizi, gruppi, allenamenti, diario, misure corporee, impostazioni)
 --   * sicurezza a livello di riga (RLS): ognuno vede solo le proprie righe
 --   * nessun accesso al ruolo "anon" (chi non ha fatto login)
 --
 -- Le voci predefinite (gruppi muscolari, attrezzi) le inserisce l'app al
 -- primo avvio, perché qui nel SQL Editor non c'è un utente collegato.
 --
--- Versione dello schema: 3 (vedi gym_schema_version e apps/gymlog/js/config.js)
+-- Versione dello schema: 4 (vedi gym_schema_version e apps/gymlog/js/config.js)
 --   v2: gym_diary.kind ('workout' | 'activity'), così una voce resta "attività" anche
 --       se il tipo di attività viene eliminato definitivamente dal cestino
 --   v3: funzione gym_restore(payload) per il ripristino del backup in un colpo solo
+--   v4: tabella gym_measurements (peso e circonferenze, una riga per giorno); il ripristino
+--       del backup la include solo se il file la contiene (i backup vecchi non la toccano)
 -- =====================================================================
 
 
@@ -145,6 +147,23 @@ create table if not exists public.gym_diary (
 alter table public.gym_diary add column if not exists kind text not null default 'workout';
 update public.gym_diary set kind = 'activity' where activity_id is not null and kind <> 'activity';
 
+-- v4: misure corporee. Una riga per giorno; tutti i valori sono facoltativi (peso in kg,
+-- circonferenze in cm, lato destro), ma almeno uno deve esserci.
+create table if not exists public.gym_measurements (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  day         date not null,
+  weight      numeric(4,1),                   -- kg
+  waist       numeric(4,1),                   -- vita, cm
+  shoulders   numeric(4,1),                   -- spalle, cm
+  chest       numeric(4,1),                   -- petto, cm
+  biceps      numeric(4,1),                   -- bicipite destro, cm
+  thigh       numeric(4,1),                   -- coscia destra, cm
+  calf        numeric(4,1),                   -- polpaccio destro, cm
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
 -- Impostazioni (una riga per utente)
 create table if not exists public.gym_settings (
   user_id         uuid primary key default auth.uid() references auth.users (id) on delete cascade,
@@ -174,6 +193,18 @@ begin
     alter table public.gym_diary add constraint gym_diary_stars_check
       check (stars is null or stars between 1 and 5);
   end if;
+  if not exists (select 1 from pg_constraint where conname = 'gym_measurements_values_check') then
+    alter table public.gym_measurements add constraint gym_measurements_values_check
+      check ((weight is not null or waist is not null or shoulders is not null or chest is not null
+              or biceps is not null or thigh is not null or calf is not null)
+         and (weight    is null or weight    between 20 and 400)
+         and (waist     is null or waist     between 10 and 300)
+         and (shoulders is null or shoulders between 10 and 300)
+         and (chest     is null or chest     between 10 and 300)
+         and (biceps    is null or biceps    between 10 and 300)
+         and (thigh     is null or thigh     between 10 and 300)
+         and (calf      is null or calf      between 10 and 300));
+  end if;
 end $$;
 
 -- Nomi unici (senza distinguere maiuscole) per le liste personalizzabili
@@ -193,6 +224,7 @@ create index if not exists gym_workout_items_wk_idx      on public.gym_workout_i
 create index if not exists gym_workout_items_user_idx    on public.gym_workout_items (user_id);
 create index if not exists gym_activity_types_user_idx   on public.gym_activity_types (user_id);
 create index if not exists gym_diary_user_day_idx        on public.gym_diary (user_id, day);
+create unique index if not exists gym_measurements_user_day on public.gym_measurements (user_id, day);
 
 
 -- ---------------------------------------------------------------------
@@ -205,7 +237,7 @@ declare
 begin
   foreach t in array array['gym_muscles', 'gym_equipment', 'gym_exercises', 'gym_exercise_muscles',
                            'gym_groups', 'gym_group_items', 'gym_workouts', 'gym_workout_items',
-                           'gym_activity_types', 'gym_diary', 'gym_settings']
+                           'gym_activity_types', 'gym_diary', 'gym_measurements', 'gym_settings']
   loop
     execute format('alter table public.%I enable row level security', t);
     execute format('revoke all on table public.%I from anon', t);
@@ -246,6 +278,9 @@ begin
 
   -- 1) cancellazione: prima i "figli", poi i "genitori"
   delete from public.gym_diary            where user_id = me;
+  if payload ? 'measurements' then         -- i backup fatti prima della v4 non hanno le misure: lì non si toccano
+    delete from public.gym_measurements   where user_id = me;
+  end if;
   delete from public.gym_workout_items    where user_id = me;
   delete from public.gym_workouts         where user_id = me;
   delete from public.gym_group_items      where user_id = me;
@@ -305,6 +340,14 @@ begin
          coalesce(r.created_at, now())
   from jsonb_populate_recordset(null::public.gym_diary, coalesce(payload->'diary', '[]')) r;
 
+  if payload ? 'measurements' then
+    insert into public.gym_measurements (id, user_id, day, weight, waist, shoulders, chest, biceps, thigh, calf,
+                                         created_at, updated_at)
+    select r.id, me, r.day, r.weight, r.waist, r.shoulders, r.chest, r.biceps, r.thigh, r.calf,
+           coalesce(r.created_at, now()), coalesce(r.updated_at, now())
+    from jsonb_populate_recordset(null::public.gym_measurements, payload->'measurements') r;
+  end if;
+
   -- 3) impostazioni: solo i preset del timer (data dell'ultimo backup e preparazione restano)
   if jsonb_typeof(payload->'settings'->'timer_presets') = 'array' then
     insert into public.gym_settings (user_id, timer_presets, seeded_at, updated_at)
@@ -316,7 +359,8 @@ begin
   return jsonb_build_object(
     'exercises', (select count(*) from public.gym_exercises where user_id = me),
     'workouts',  (select count(*) from public.gym_workouts  where user_id = me),
-    'diary',     (select count(*) from public.gym_diary     where user_id = me));
+    'diary',     (select count(*) from public.gym_diary     where user_id = me),
+    'measurements', (select count(*) from public.gym_measurements where user_id = me));
 end;
 $$;
 
@@ -332,14 +376,14 @@ create or replace function public.gym_schema_version()
 returns integer
 language sql immutable
 set search_path = ''
-as $$ select 3 $$;
+as $$ select 4 $$;
 
 revoke all on function public.gym_schema_version() from public, anon;
 grant execute on function public.gym_schema_version() to authenticated;
 
 
 -- ---------------------------------------------------------------------
--- 5. CONTROLLO FINALE: deve mostrare 11 righe, tutte con rowsecurity = true
+-- 5. CONTROLLO FINALE: deve mostrare 12 righe, tutte con rowsecurity = true
 -- ---------------------------------------------------------------------
 
 select tablename, rowsecurity from pg_tables

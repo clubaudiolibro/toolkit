@@ -3,8 +3,8 @@
  * Ogni operazione scrive subito su Supabase; solo se riesce aggiorna i dati in memoria.
  */
 import { run, fetchAll, uid } from './db.js';
-import { DEFAULT_MUSCLES, DEFAULT_EQUIPMENT } from './config.js';
-import { byName } from './ui.js';
+import { DEFAULT_MUSCLES, DEFAULT_EQUIPMENT, MEASURE_KEYS, CIRC_KEYS, MEASURE_REMIND } from './config.js';
+import { byName, todayIso } from './ui.js';
 
 export const state = {
   muscles: [],          // { id, name, sort_order }
@@ -17,6 +17,7 @@ export const state = {
   workoutItems: [],     // elementi degli allenamenti
   activities: [],       // tipi di attività (es. Corsa), anche nel cestino
   diary: [],            // voci del diario
+  measurements: [],     // misure corporee, una per giorno (peso e circonferenze)
   settings: null,
 };
 
@@ -55,7 +56,7 @@ async function ensureSeed() {
 
 export async function loadAll() {
   await ensureSeed();
-  const [muscles, equipment, exercises, links, groups, groupItems, workouts, workoutItems, activities, diary] = await Promise.all([
+  const [muscles, equipment, exercises, links, groups, groupItems, workouts, workoutItems, activities, diary, measurements] = await Promise.all([
     fetchAll('gym_muscles', 'id,name,sort_order,created_at'),
     fetchAll('gym_equipment', 'id,name,sort_order,created_at'),
     fetchAll('gym_exercises'),
@@ -66,9 +67,11 @@ export async function loadAll() {
     fetchAll('gym_workout_items'),
     fetchAll('gym_activity_types'),
     fetchAll('gym_diary'),
+    fetchAll('gym_measurements'),
   ]);
   state.activities = activities;
   state.diary = diary.map(tagEntry);
+  state.measurements = measurements.map(numifyMeasure);
   state.groups = groups;
   state.groupItems = groupItems.map(numify);
   state.workouts = workouts;
@@ -503,6 +506,72 @@ export function suggestedWorkout() {
     if (i >= 0) return { workout: list[(i + 1) % list.length], after: d };
   }
   return { workout: list[0], after: null };
+}
+
+/* ---------------------------------------------------------------------
+   Misure corporee: peso (kg) e circonferenze lato destro (cm), una riga per giorno
+   --------------------------------------------------------------------- */
+
+/** PostgREST può restituire i numeric come testo: li riporta a numero. */
+function numifyMeasure(row) {
+  for (const k of MEASURE_KEYS) if (row[k] != null) row[k] = Number(row[k]);
+  return row;
+}
+
+/** Misure in ordine cronologico inverso (più recente prima). */
+export const measurementsSorted = () => state.measurements.slice().sort((a, b) => b.day.localeCompare(a.day));
+export const measurementOn = day => state.measurements.find(m => m.day === day) || null;
+
+/**
+ * Salva le misure di un giorno. values: { weight, waist, ... } con null per i campi vuoti.
+ * Se per quel giorno c'è già una riga viene sostituita (la schermata precompila i valori esistenti).
+ */
+export async function saveMeasurement(day, values) {
+  const clean = {};
+  for (const k of MEASURE_KEYS) clean[k] = values[k] == null ? null : values[k];
+  const existing = measurementOn(day);
+  if (existing) {
+    const saved = await run(c => c.from('gym_measurements').update({ ...clean, updated_at: nowIso() })
+      .eq('id', existing.id).select().single());
+    Object.assign(existing, numifyMeasure(saved));
+    return existing;
+  }
+  const saved = numifyMeasure(await run(c => c.from('gym_measurements').insert({ id: newId(), day, ...clean }).select().single()));
+  state.measurements.push(saved);
+  return saved;
+}
+
+export async function deleteMeasurement(id) {
+  await run(c => c.from('gym_measurements').delete().eq('id', id), { action: "l'eliminazione" });
+  state.measurements = state.measurements.filter(m => m.id !== id);
+}
+
+/** Giorni interi tra "AAAA-MM-GG" e oggi (ora locale). */
+export function daysSinceDay(day) {
+  const a = new Date(todayIso() + 'T12:00:00'), b = new Date(day + 'T12:00:00');
+  return Math.round((a - b) / 86400000);
+}
+
+/** Giorno più recente con almeno uno dei campi indicati, o null. */
+function lastMeasureDay(keys) {
+  let best = null;
+  for (const m of state.measurements) {
+    if (keys.some(k => m[k] != null) && (!best || m.day > best)) best = m.day;
+  }
+  return best;
+}
+
+/**
+ * Promemoria: il peso dopo più di 15 giorni, le circonferenze dopo più di 30.
+ * Per ciascuno: { last, days, due } (days = null se non è mai stato inserito).
+ */
+export function measureStatus() {
+  const build = (keys, limit) => {
+    const last = lastMeasureDay(keys);
+    const days = last ? daysSinceDay(last) : null;
+    return { last, days, due: days == null || days > limit };
+  };
+  return { weight: build(['weight'], MEASURE_REMIND.weight), circ: build(CIRC_KEYS, MEASURE_REMIND.circ) };
 }
 
 /* ---------------------------------------------------------------------

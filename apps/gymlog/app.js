@@ -18,6 +18,7 @@ import * as run from './js/views/run.js';
 import * as diary from './js/views/diary.js';
 import * as activities from './js/views/activities.js';
 import * as stats from './js/views/stats.js';
+import * as measures from './js/views/measures.js';
 import * as settings from './js/views/settings.js';
 import * as backup from './js/views/backup.js';
 import { initTimer } from './js/timer.js';
@@ -48,6 +49,7 @@ const ROUTES = [
   [/^altro\/cestino$/, trash, 'altro'],
   [/^altro\/attivita$/, activities, 'altro'],
   [/^altro\/statistiche$/, stats, 'altro'],
+  [/^altro\/misure$/, measures, 'altro'],
   [/^altro\/impostazioni$/, settings, 'altro'],
   [/^altro\/backup$/, backup, 'altro'],
 ];
@@ -163,7 +165,7 @@ function showSetup(current) {
       el('li', { html: 'Apri <strong>supabase.com</strong>, entra nel tuo progetto e scegli <strong>SQL Editor</strong> nel menu a sinistra.' }),
       el('li', { html: 'Premi <strong>New query</strong>.' }),
       el('li', { html: 'Apri il file <a href="https://github.com/clubaudiolibro/toolkit/blob/main/supabase/gymlog.sql" target="_blank" rel="noopener"><code>supabase/gymlog.sql</code></a> e copialo tutto (icona «Copy raw file» in alto a destra).' }),
-      el('li', { html: 'Incollalo nella query vuota e premi <strong>Run</strong>: in fondo devono comparire 11 righe con <code>true</code>.' }),
+      el('li', { html: 'Incollalo nella query vuota e premi <strong>Run</strong>: in fondo devono comparire 12 righe con <code>true</code>.' }),
       el('li', { text: 'Torna qui e ricarica la pagina.' })),
     el('button', { class: 'btn btn-primary btn-block', type: 'button', text: 'Ricarica', on: { click: () => location.reload() } })));
 }

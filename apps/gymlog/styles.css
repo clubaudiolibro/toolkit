@@ -502,3 +502,57 @@ textarea.input { min-height: 96px; resize: vertical; line-height: 1.45; }
   .backup-banner { flex-wrap: wrap; }
   .backup-banner .btn { width: 100%; }
 }
+
+/* ---------- Misure corporee ---------- */
+.fields-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+.field.hl .input { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.input.invalid { border-color: var(--danger); box-shadow: 0 0 0 3px var(--danger-soft); }
+.card.pad .hint { margin-left: 0; margin-right: 0; }
+
+details.circ { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 4px; }
+details.circ > summary {
+  list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  min-height: var(--touch); font-weight: 650; cursor: pointer;
+}
+details.circ > summary::-webkit-details-marker { display: none; }
+details.circ > summary .chev { transition: transform .15s; }
+details.circ[open] > summary .chev { transform: rotate(90deg); }
+
+/* sagoma con i punti di misura */
+.figure-wrap { position: relative; max-width: 360px; margin: 8px auto 6px; }
+.figure-wrap svg { display: block; width: 100%; height: auto; touch-action: manipulation; }
+.fig-fill { fill: var(--line); }
+.fig-limb { fill: none; stroke: var(--line); }
+.fig-band { fill: none; stroke: var(--accent); stroke-width: 3.5; stroke-linecap: round; transition: stroke-width .12s; }
+.fig-pt.on .fig-band, .fig-pt.open .fig-band { stroke-width: 6; }
+.fig-hit { fill: none; stroke: transparent; stroke-width: 22; stroke-linecap: round; cursor: pointer; }
+.fig-leader { stroke: var(--accent); stroke-width: 1.2; stroke-dasharray: 3 3; opacity: .7; }
+.fig-label { font: 600 13.5px var(--font); fill: var(--text); }
+.fig-info { cursor: pointer; outline: none; }
+.fig-info-hit { fill: transparent; }
+.fig-dot { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.6; }
+.fig-i { font: 700 14px var(--font); fill: var(--accent-dark); text-anchor: middle; pointer-events: none; }
+.fig-pt.open .fig-dot, .fig-pt.on .fig-dot { fill: var(--accent); }
+.fig-pt.open .fig-i, .fig-pt.on .fig-i { fill: #fff; }
+.fig-info:focus-visible .fig-dot { stroke-width: 3.5; }
+.fig-tip {
+  position: absolute; z-index: 6; background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.18); padding: 10px 12px; font-size: .92rem; line-height: 1.4;
+}
+.fig-tip strong { display: block; margin-bottom: 2px; }
+
+/* grafico */
+.chart { width: 100%; height: auto; display: block; margin-top: 4px; }
+.chart-grid { stroke: var(--line); stroke-width: 1; }
+.chart-axis { font: 500 11px var(--font); fill: var(--muted); }
+.chart-line { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.chart-pt { fill: #fff; stroke: var(--accent); stroke-width: 2; }
+.chart-pt.sel { fill: var(--accent); }
+.chart-hit { fill: transparent; cursor: pointer; outline: none; }
+.chart-hit:focus-visible { stroke: var(--accent); stroke-width: 2; }
+.chart-readout { text-align: center; font-weight: 650; margin: 6px 0 2px; }
+.card.pad p.chart-sub { text-align: center; font-size: .88rem; margin-top: 2px; }
+
+/* storico */
+.hist-main { background: none; border: 0; padding: 0; text-align: left; font: inherit; color: inherit; min-height: 44px; }
+.hist-main:active { opacity: .7; }
