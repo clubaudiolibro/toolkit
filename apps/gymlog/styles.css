@@ -245,7 +245,7 @@ textarea.input { min-height: 96px; resize: vertical; line-height: 1.45; }
 }
 .sheet-backdrop.open .sheet { transform: none; }
 .sheet-title { margin: 0 0 8px; font-size: 1.2rem; }
-.sheet-text { margin: 0 0 8px; color: var(--muted); }
+.sheet-text { margin: 0 0 8px; color: var(--muted); white-space: pre-line; }
 .sheet .input { margin: 8px 0; }
 .sheet-actions { display: flex; gap: 10px; margin-top: 16px; }
 .sheet-actions .btn { flex: 1; }
@@ -408,10 +408,10 @@ textarea.input { min-height: 96px; resize: vertical; line-height: 1.45; }
 .legend { display: flex; gap: 16px; justify-content: center; margin-top: 10px; font-size: .82rem; color: var(--muted); }
 .legend > span { display: inline-flex; align-items: center; gap: 6px; }
 .last3 { padding: 4px 0; }
-.last3-row { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 46px; padding: 6px 14px; border: 0; background: transparent; text-align: left; }
+.last3-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%; min-height: 46px; padding: 6px 14px; border: 0; background: transparent; text-align: left; }
 .last3-row + .last3-row { border-top: 1px solid var(--line); }
 .last3-date { font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 600; }
-.last3-name { flex: 1; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.last3-name { flex: 1 1 auto; font-weight: 600; overflow-wrap: break-word; word-break: normal; }
 .list-date { font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 600; font-size: .92rem; flex: none; }
 .stars-text { color: #c48a1c; letter-spacing: 1px; font-size: .95rem; flex: none; }
 .stars { display: flex; justify-content: center; gap: 4px; margin: 10px 0 4px; }
@@ -484,3 +484,21 @@ textarea.input { min-height: 96px; resize: vertical; line-height: 1.45; }
 .steps li { margin: 4px 0; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ---------- Backup ---------- */
+.backup-banner {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding: 12px 14px; border-radius: var(--radius);
+  background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); color: var(--text); text-decoration: none;
+}
+.backup-banner .row-title { font-size: .98rem; }
+.backup-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.backup-banner.overdue { background: var(--warn-soft); border-color: color-mix(in srgb, var(--warn) 35%, var(--line)); }
+.backup-banner.overdue .backup-label { color: var(--warn); }
+.backup-banner.overdue .row-icon { background: #fff; color: var(--warn); }
+.backup-banner .btn { flex: none; }
+.card.pad .stack { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 4px; }
+.card.pad p.small { font-size: .88rem; }
+@media (max-width: 380px) {
+  .backup-banner { flex-wrap: wrap; }
+  .backup-banner .btn { width: 100%; }
+}

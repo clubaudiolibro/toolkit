@@ -192,7 +192,7 @@ Solo tema chiaro, accento `#b0506e` (colore della categoria Benessere).
 - **Database:** `supabase/gymlog.sql` (una volta sola nel SQL Editor; rilanciabile senza perdere dati).
   Tutte le tabelle hanno il prefisso `gym_`, RLS attiva (ognuno vede solo le proprie righe) e nessun
   accesso per `anon`. La versione dello schema è in `gym_schema_version()` e in `SCHEMA_VERSION` di
-  `apps/gymlog/js/config.js`: se il database è più vecchio l'app mostra «Database da preparare».
+  `apps/gymlog/js/config.js`: se il database è più vecchio l'app mostra «Database da aggiornare» (versione attuale: 3).
 - **Voci predefinite** (gruppi muscolari e attrezzi): le inserisce l'app al primo avvio.
 - **Accesso:** usa il login unico (`Toolbox.getClient()`), nessun dato di collegamento duplicato.
 - **Salvataggio:** ogni modifica va subito su Supabase; se manca la rete compare un avviso e la modifica
@@ -218,4 +218,15 @@ Solo tema chiaro, accento `#b0506e` (colore della categoria Benessere).
 - **Trascinamento:** SortableJS 1.15.7 (MIT) copiato in `apps/gymlog/vendor/`, si trascina solo dalla maniglia.
 - **Cestino:** esercizi, gruppi, allenamenti, attività eliminati restano con `deleted_at` e si possono
   ripristinare; si svuota solo a mano.
+- **Backup** (Altro → Backup, `js/backup.js` + `js/views/backup.js`):
+  - *Esporta* scarica `gymlog-backup-gg-mm-aa.json` con tutte le tabelle (cestino compreso, id originali, senza
+    `user_id`) in `{ app: 'gymlog', format: 1, created_at, app_version, schema_version, counts, data }` e salva
+    `gym_settings.last_backup_at`. A parte si può scaricare un CSV per Excel (`;`, UTF-8 con BOM, pesi con la
+    virgola): diario, esercizi, gruppi, allenamenti. Il CSV non serve per il ripristino.
+  - *Ripristina* accetta solo il JSON, mostra un riepilogo e chiede conferma; prima scarica una copia di sicurezza
+    dei dati attuali (`gymlog-prima-del-ripristino-…json`), poi chiama `gym_restore(payload)` (schema v3): cancella
+    e reinserisce tutto in un'unica transazione (se fallisce non cambia niente), con `security invoker` (vale RLS)
+    e `user_id` sempre dell'utente collegato. Delle impostazioni ripristina solo i preset del timer.
+  - Su iPhone con l'app installata sulla Home i file si salvano dal foglio «Condividi» (Salva su File).
+  - Avviso in Oggi e in Altro se l'ultimo backup ha più di 30 giorni o non è mai stato fatto (e ci sono dati).
 - `APP_VERSION` in `apps/gymlog/js/config.js` va tenuta uguale alla versione di `gymlog` in `assets/js/apps.js`.

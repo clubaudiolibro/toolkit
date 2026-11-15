@@ -2,6 +2,8 @@
 import { el, icon } from '../ui.js';
 import { state, trashItems, activeActivities } from '../store.js';
 import { APP_VERSION } from '../config.js';
+import { backupBanner } from './backup.js';
+import { backupOverdue, backupStatusText } from '../backup.js';
 
 function row({ href, ico, title, sub, disabled }) {
   const inner = [
@@ -17,6 +19,7 @@ function row({ href, ico, title, sub, disabled }) {
 export function render(ctx) {
   ctx.setTitle('Altro');
   const nTrash = trashItems().length;
+  if (backupOverdue()) ctx.view.appendChild(backupBanner());
   ctx.view.append(
     el('h2', { class: 'section-title', text: 'Liste personali' }),
     el('ul', { class: 'list' },
@@ -26,7 +29,7 @@ export function render(ctx) {
     el('h2', { class: 'section-title', text: 'Dati' }),
     el('ul', { class: 'list' },
       row({ href: '#/altro/cestino', ico: 'trash', title: 'Cestino', sub: nTrash ? (nTrash === 1 ? '1 elemento' : nTrash + ' elementi') : 'Vuoto' }),
-      row({ ico: 'backup', title: 'Backup', sub: 'In arrivo nella fase 5', disabled: true }),
+      row({ href: '#/altro/backup', ico: 'backup', title: 'Backup', sub: backupStatusText() }),
       row({ href: '#/altro/statistiche', ico: 'stats', title: 'Statistiche', sub: 'Mese, media settimanale, stelline' }),
       row({ href: '#/altro/impostazioni', ico: 'settings', title: 'Impostazioni', sub: 'Installa sulla Home, timer' })),
     el('p', { class: 'about', text: 'GymLog v' + APP_VERSION }));

@@ -11,7 +11,7 @@
  * dell'app, aggiornando anche l'elenco CORE. All'attivazione vengono cancellate solo le vecchie
  * cache con prefisso "gymlog-app-" (mai quelle delle altre app).
  */
-const CACHE_VERSION = 'gymlog-app-v1';
+const CACHE_VERSION = 'gymlog-app-v2';
 const APP_CACHE_PREFIX = 'gymlog-app-';
 
 const CORE = [
@@ -23,6 +23,7 @@ const CORE = [
   './icons/icon-maskable-512.png',
   './icons/icon.svg',
   './index.html',
+  './js/backup.js',
   './js/components.js',
   './js/config.js',
   './js/db.js',
@@ -32,6 +33,7 @@ const CORE = [
   './js/timer.js',
   './js/ui.js',
   './js/views/activities.js',
+  './js/views/backup.js',
   './js/views/diary.js',
   './js/views/exercise-edit.js',
   './js/views/exercises.js',

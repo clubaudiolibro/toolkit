@@ -4,6 +4,8 @@ import { activeWorkouts, getWorkout, suggestedWorkout, diaryByDay, isActivityEnt
 import { pickFromList, starsText } from '../components.js';
 import { inProgress } from '../progress.js';
 import { workoutCount } from './workouts.js';
+import { backupBanner } from './backup.js';
+import { backupOverdue } from '../backup.js';
 
 const DAYS = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
 
@@ -11,6 +13,7 @@ export function render(ctx) {
   ctx.setTitle('Oggi');
   const now = new Date();
   ctx.view.appendChild(el('p', { class: 'today-date', text: DAYS[now.getDay()] + ' ' + fmtDate(now) }));
+  if (backupOverdue()) ctx.view.appendChild(backupBanner());
 
   const list = activeWorkouts();
   if (!list.length) {
