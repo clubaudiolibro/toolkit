@@ -5,7 +5,7 @@
  *  - tag inclusi: OR dentro la stessa categoria, AND tra categorie diverse;
  *  - un documento con almeno un tag escluso viene scartato;
  *  - i documenti senza tag compaiono solo se nessun filtro tag è attivo;
- *  - stato (scelta multipla), voto minimo, ricerca su titolo/artista/note/nome file.
+ *  - stato (scelta multipla), voto minimo, ricerca su titolo/artista/note/nome link/nome file.
  */
 import { STATUSES } from './config.js';
 import { state, activeCategories, activeTags, activeTagIds, activeDocuments, docActiveTagIds, compareTags } from './store.js';
@@ -90,7 +90,7 @@ export function applyFilter(f, docs = activeDocuments()) {
     if (status.size && !status.has(d.status)) return false;
     if (f.minMastery && (Number(d.mastery) || 0) < f.minMastery) return false;
     if (words.length) {
-      const hay = norm(`${d.title || ''} ${d.artist || ''} ${d.notes || ''} ${d.original_name || ''}`);
+      const hay = norm(`${d.title || ''} ${d.artist || ''} ${d.notes || ''} ${d.link_label || ''} ${d.original_name || ''}`);
       if (!words.every((w) => hay.includes(w))) return false;
     }
     return true;
@@ -123,6 +123,7 @@ export function createFilterPanel({ filter, onChange, showSearch = true, showSor
       ${showSort ? `<label class="fp-sort"><span class="sr-only">Ordina</span><select aria-label="Ordinamento">${SORTS.map((s) => `<option value="${s.id}">${s.label}</option>`).join('')}</select></label>
         <button type="button" class="btn fp-shuffle" title="Mischia di nuovo">🔀 Mischia</button>` : ''}
       <button type="button" class="btn fp-toggle" aria-expanded="true">Filtri <span class="badge zero fp-count">0</span></button>
+      <button type="button" class="btn fp-clear" title="Toglie tutti i filtri e svuota la ricerca" hidden>✕ Azzera filtri</button>
     </div>
     <div class="fp-body">
       <div class="fp-cats"></div>
@@ -139,7 +140,6 @@ export function createFilterPanel({ filter, onChange, showSearch = true, showSor
       </div>
       <div class="fp-foot">
         <span class="muted small">Tocca un tag: 1 volta = includi, 2 volte = escludi, 3 volte = neutro.</span>
-        <button type="button" class="btn ghost fp-reset">Azzera filtri</button>
       </div>
     </div>
   </div>`);
@@ -186,6 +186,8 @@ export function createFilterPanel({ filter, onChange, showSearch = true, showSor
     const n = activeFilterCount(f);
     const badge = el.querySelector('.fp-count');
     badge.textContent = String(n); badge.classList.toggle('zero', n === 0);
+    // il tasto "Azzera" compare solo se c'è qualcosa da togliere (filtri o testo cercato)
+    el.querySelector('.fp-clear').hidden = n === 0 && !f.query.trim();
   };
 
   el.addEventListener('click', (e) => {
@@ -206,8 +208,10 @@ export function createFilterPanel({ filter, onChange, showSearch = true, showSor
     const m = e.target.closest('.chip[data-min]');
     if (m) { f.minMastery = +m.dataset.min; fire(); }
   });
-  el.querySelector('.fp-reset').onclick = () => {
-    f = { ...emptyFilter(), sort: f.sort, seed: f.seed, query: f.query };
+  // Azzera tutto (tag, stato, voto e ricerca); l'ordinamento scelto resta
+  el.querySelector('.fp-clear').onclick = () => {
+    f = { ...emptyFilter(), sort: f.sort, seed: f.seed };
+    if (search) search.value = '';
     fire();
   };
   if (search) search.addEventListener('input', debounce(() => { f.query = search.value; fire(); }, 150));

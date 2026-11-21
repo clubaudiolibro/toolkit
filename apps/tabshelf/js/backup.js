@@ -60,7 +60,7 @@ export function buildBackupData() {
     categories: cats.map((c) => pick(c, ['id', 'name', 'sort_order', 'created_at'])),
     tags: tags.map((t) => pick(t, ['id', 'category_id', 'name', 'color', 'sort_order', 'created_at'])),
     documents: docs.map((d) => ({
-      ...pick(d, ['id', 'title', 'artist', 'notes', 'original_name', 'file_type', 'file_size', 'status', 'mastery', 'created_at']),
+      ...pick(d, ['id', 'title', 'artist', 'notes', 'link_url', 'link_label', 'original_name', 'file_type', 'file_size', 'status', 'mastery', 'created_at']),
       file: zipPath.get(d.id),
     })),
     document_tags: links,
@@ -70,12 +70,12 @@ export function buildBackupData() {
   const catName = new Map(cats.map((c) => [c.id, c.name]));
   const tagLabel = new Map(tags.map((t) => [t.id, `${catName.get(t.category_id)}: ${t.name}`]));
   const rank = new Map(tags.map((t, i) => [t.id, (cats.findIndex((c) => c.id === t.category_id) * 10000) + i]));
-  const header = ['Titolo', 'Artista', 'Tag', 'Stato', 'Voto', 'Note', 'Nome file originale', 'Tipo', 'Dimensione (KB)', 'Data di caricamento', 'File nel backup', 'ID'];
+  const header = ['Titolo', 'Artista', 'Tag', 'Stato', 'Voto', 'Note', 'Link', 'Nome link', 'Nome file originale', 'Tipo', 'Dimensione (KB)', 'Data di caricamento', 'File nel backup', 'ID'];
   const rows = docs.map((d) => {
     const dt = links.filter((l) => l.document_id === d.id).map((l) => l.tag_id).sort((a, b) => rank.get(a) - rank.get(b));
     const date = d.created_at ? new Date(d.created_at).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
     return [d.title || '', d.artist || '', dt.map((t) => tagLabel.get(t)).join(' | '),
-      STATUSES.find((s) => s.id === d.status)?.label || '', d.mastery || '', d.notes || '', d.original_name || '',
+      STATUSES.find((s) => s.id === d.status)?.label || '', d.mastery || '', d.notes || '', d.link_url || '', d.link_label || '', d.original_name || '',
       d.file_type === 'pdf' ? 'PDF' : 'Immagine', String(Math.round((Number(d.file_size) || 0) / 1024)), date,
       zipPath.get(d.id), d.id];
   });

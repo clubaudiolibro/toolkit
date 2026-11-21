@@ -5,7 +5,7 @@ import { STATUSES, IMAGES } from '../config.js';
 import { state, docActiveTagIds } from '../store.js';
 import { updateDocument, setDocumentTags, trashDocuments, restoreDocuments } from '../actions.js';
 import { thumbUrl, downloadBlob, makePaths, uploadFile, removeFiles, primeThumb } from '../storage.js';
-import { esc, h, formatBytes, formatDate } from '../util.js';
+import { esc, h, formatBytes, formatDate, safeUrl } from '../util.js';
 import { openDialog, confirmDialog, toast, toastError } from '../ui.js';
 import { createTagPicker } from '../tagpicker.js';
 import { editImage, encode, resizeCanvas } from '../images.js';
@@ -52,6 +52,10 @@ export function openDocSheet(docId) {
       <div class="field"><span>Stato</span>${statusSegHtml(status)}</div>
       <div class="field"><span>Voto (padronanza)</span>${starsInputHtml(mastery)}</div>
       <label class="field"><span>Note</span><textarea name="notes" rows="3">${esc(doc.notes || '')}</textarea></label>
+      <div class="ds-link-grid">
+        <label class="field"><span>Link: URL</span><input type="text" name="linkUrl" inputmode="url" autocapitalize="off" autocomplete="off" spellcheck="false" value="${esc(doc.link_url || '')}" placeholder="https://… (facoltativo)"></label>
+        <label class="field"><span>Link: nome</span><input type="text" name="linkLabel" value="${esc(doc.link_label || '')}" placeholder="es. YouTube"></label>
+      </div>
     </div>
   </div>`);
 
@@ -127,11 +131,15 @@ export function openDocSheet(docId) {
       { label: 'Chiudi', value: null },
       { label: 'Salva', kind: 'primary', onClick: async () => {
         const f = body;
+        const rawUrl = f.querySelector('[name=linkUrl]').value.trim();
+        const linkUrl = safeUrl(rawUrl);
+        if (rawUrl && !linkUrl) { toast('L\'indirizzo del link non è valido (deve iniziare con http:// o https://).', { type: 'error' }); return false; }
         try {
           await updateDocument(doc.id, {
             title: clean(f.querySelector('[name=title]').value),
             artist: clean(f.querySelector('[name=artist]').value),
             notes: clean(f.querySelector('[name=notes]').value),
+            link_url: linkUrl, link_label: linkUrl ? clean(f.querySelector('[name=linkLabel]').value) : null,
             status, mastery: mastery || null,
           });
           await setDocumentTags(doc.id, picker.value);

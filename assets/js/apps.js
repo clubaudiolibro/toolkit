@@ -58,7 +58,7 @@ const APPS = [
     description: "Libreria di tablature con tag e filtri: carichi dal PC, studi dal tablet.",
     url: "./apps/tabshelf/index.html",
     category: "chitarra",
-    version: "1.0",
+    version: "1.1",
     tags: ["Tag", "Immagini / PDF", "PC + tablet"],
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="3" height="13" rx="1"/><rect x="8.5" y="7" width="3" height="11" rx="1"/><path d="M3 21h18"/><path d="M17 16V6l3 1"/><circle cx="15.5" cy="16" r="1.6"/></svg>'
   },
@@ -81,6 +81,7 @@ const APPS = [
           version, text (descrizione brevissima).
    ===================================================================== */
 const CHANGELOG = [
+  { date: "2026-11-21", app: "tabshelf", version: "1.1", text: "Tasto «Azzera filtri» sempre a portata; link facoltativo (URL + nome) per ogni immagine; in Visualizza il tasto «i» apre note (modificabili) e link. Richiede di rilanciare apps/tabshelf/supabase/setup.sql (schema 3)." },
   { date: "2026-11-21", app: "toolbox", version: "1.5", text: "Rimossa la sezione «In evidenza» dalla home." },
   { date: "2026-11-21", app: "toolbox", version: "1.4", text: "Registro delle versioni: di default mostra solo le ultime 3 voci, con il pulsante «Mostra tutto» per vedere lo storico." },
   { date: "2026-11-21", app: "gymlog", version: "1.6", text: "Schede degli allenamenti più compatte, nodo espandibile «Istruzioni» (come si esegue, errori da evitare, video) anche durante l'allenamento; campi rinominati; tolte le scritte «null» dai fogli di scelta." },
