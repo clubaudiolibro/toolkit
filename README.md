@@ -7,6 +7,7 @@ Web app statica (PWA installabile) che raccoglie:
 - **Postcard audiolibri** — `apps/postcard-audiolibri/`
 - **TabShelf** — `apps/tabshelf/` (libreria di tablature con tag e filtri: si carica dal PC, si studia dal tablet; dati e file su Supabase. Guida completa più sotto)
 - **GymLog** — `apps/gymlog/` (registro degli allenamenti in palestra, pensato per il telefono; dati su Supabase. Vedi «GymLog» più sotto)
+- **FilmShelf** — `apps/filmshelf/` (film visti e watchlist con ricerca su TMDB, pensato per il telefono; dati su Supabase. Vedi «FilmShelf» più sotto)
 - `apps/tablature/` — contiene solo il reindirizzamento a TabShelf della vecchia *Guitar Tab Library* (vedi «Vecchia Guitar Tab Library»)
 
 Nessun build step e nessun framework: HTML, CSS e JavaScript (moduli ES) con percorsi relativi.
@@ -236,3 +237,32 @@ Solo tema chiaro, accento `#b0506e` (colore della categoria Benessere).
   - Su iPhone con l'app installata sulla Home i file si salvano dal foglio «Condividi» (Salva su File).
   - Avviso in Oggi e in Altro se l'ultimo backup ha più di 30 giorni o non è mai stato fatto (e ci sono dati).
 - `APP_VERSION` in `apps/gymlog/js/config.js` va tenuta uguale alla versione di `gymlog` in `assets/js/apps.js`.
+
+## FilmShelf
+
+Database personale dei film visti e della watchlist (sezione Film), pensato prima per il telefono.
+Solo tema chiaro, accento `#8a3fb8` (colore della categoria Film). Stessa struttura di GymLog.
+
+- **Database:** `supabase/filmshelf.sql` (una volta sola nel SQL Editor; rilanciabile senza perdere dati).
+  Tabelle con prefisso `filmshelf_`, RLS attiva (ognuno vede solo le proprie righe), nessun accesso per `anon`.
+  - `filmshelf_film`: una riga per film (una sola visione: se lo si rivede si aggiornano data e voto).
+    `tmdb_id` unico per utente; `stato` `visto` | `watchlist`; `voto` 1–10 a passi di 0,5; `luoghi` solo
+    `Cinema`, `The Space Pass`, `Casa`; `aggiornato_il` si aggiorna da solo.
+  - `filmshelf_impostazioni`: la chiave TMDB (una riga per utente).
+  - Versione dello schema in `filmshelf_schema_version()` e in `SCHEMA_VERSION` di `apps/filmshelf/js/config.js` (attuale: 1).
+- **Chiave TMDB:** non è mai nel codice. La prima volta l'app la chiede (Aggiungi o Altro), la prova su TMDB e la
+  salva in `filmshelf_impostazioni`; dopo il login la legge e chiama TMDB direttamente dal browser.
+  Vanno bene sia la «Chiave API» (32 caratteri, inviata come `api_key`) sia il «Token di accesso in lettura»
+  (`eyJ…`, inviato come `Authorization: Bearer`).
+- **TMDB** (`js/tmdb.js`): lingua `it-IT`; ricerca `search/movie` mentre si scrive (attesa 300 ms); dettagli
+  `movie/{id}` con `append_to_response=translations` (trama inglese se manca quella italiana). Tutte le chiamate
+  passano da una coda con almeno 260 ms tra l'una e l'altra (limite TMDB ≈ 40 ogni 10 s); su 429 aspetta e riprova.
+- **Locandine:** si salva solo `poster_path`; l'immagine si carica da `image.tmdb.org` (`w185` elenchi, `w500` scheda)
+  con lazy loading. Senza rete compare un riquadro con l'icona della pellicola.
+- **Senza rete:** una copia dei film è salvata nel browser (`localStorage`, chiave `filmshelf.cache`) e viene mostrata
+  in sola lettura.
+- **Crediti:** Altro → «Crediti e informazioni», con logo TMDB e la dicitura richiesta.
+- **Installazione (PWA):** `manifest.json` + `service-worker.js` (cache `filmshelf-app-*`, prima la rete; non tocca
+  mai Supabase né TMDB). **`CACHE_VERSION`** va incrementata quando si aggiungono, rinominano o tolgono file,
+  aggiornando l'elenco `CORE`.
+- `APP_VERSION` in `apps/filmshelf/js/config.js` va tenuta uguale alla versione di `filmshelf` in `assets/js/apps.js`.

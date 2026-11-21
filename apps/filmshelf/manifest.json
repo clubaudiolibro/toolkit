@@ -1,0 +1,21 @@
+{
+  "id": "./",
+  "name": "FilmShelf",
+  "short_name": "FilmShelf",
+  "description": "Il mio database personale dei film visti, con watchlist e statistiche.",
+  "lang": "it",
+  "dir": "ltr",
+  "start_url": "./index.html#/visti",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#f6f5f2",
+  "background_color": "#f6f5f2",
+  "categories": ["entertainment", "lifestyle"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
