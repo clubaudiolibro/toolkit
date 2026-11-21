@@ -1,11 +1,12 @@
 /**
- * views/altro.js — «Altro»: chiave TMDB, crediti e informazioni.
+ * views/altro.js — «Altro»: esporta CSV, import da Letterboxd, chiave TMDB, crediti e informazioni.
  */
 import { el, icon, toast, confirmDialog } from '../ui.js';
 import { loadKey, hasKey, removeKey } from '../tmdb.js';
 import { APP_VERSION } from '../config.js';
 import * as store from '../store.js';
 import { keySetupCard } from './key.js';
+import { exportCsv } from '../export.js';
 
 /** Logo TMDB approvato (versione «blue short» dalla pagina ufficiale dei loghi TMDB). */
 const TMDB_LOGO = 'https://www.themoviedb.org/assets/2/v4/logos/v2/blue_short-8e7b30f73a4020692ccca9c88bafe5dcb6f8a62a4c6bc55cd9ba82bb2cd95f6c.svg';
@@ -23,6 +24,26 @@ export function creditsCard() {
 export async function render(ctx) {
   ctx.setTitle('Altro');
   const view = ctx.view;
+  const n = store.all().length;
+
+  // Esporta CSV (copia di sicurezza)
+  view.appendChild(el('div', { class: 'card pad' },
+    el('h2', { class: 'card-title' }, icon('backup'), 'Esporta CSV'),
+    el('p', { text: 'Scarica tutti i film (visti e watchlist) con tutti i tuoi dati in un file che si apre con Excel. Tienilo come copia di sicurezza.' }),
+    el('button', {
+      type: 'button', class: 'btn btn-primary btn-block', disabled: !n,
+      on: { click: () => { const k = exportCsv(); toast(k + (k === 1 ? ' film esportato.' : ' film esportati.'), 'ok'); } },
+    }, icon('backup'), n ? 'Esporta CSV (' + n + ' film)' : 'Nessun film da esportare')));
+
+  // import Letterboxd (sezione rimovibile)
+  if (!store.isOffline()) {
+    view.appendChild(el('a', { class: 'card pad row-link', href: '#/altro/importa-letterboxd' },
+      el('span', { class: 'row-icon' }, icon('upload')),
+      el('span', { class: 'row-main' },
+        el('span', { class: 'row-title', text: 'Importa da Letterboxd' }),
+        el('span', { class: 'row-sub', text: 'Una volta sola: porta qui i film visti, i voti e le date (meglio dal PC).' })),
+      icon('chevron', 'ico chev')));
+  }
 
   // Chiave TMDB
   if (!store.isOffline()) {

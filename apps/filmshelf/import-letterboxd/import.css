@@ -1,0 +1,28 @@
+/* Import da Letterboxd — stili usati solo da questa sezione (si può cancellare insieme alla cartella). */
+.lb-file { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.lb-pick { margin-top: 10px; border-style: dashed; color: var(--accent-dark); }
+.lb-msg { margin-top: 12px; }
+.lb-msg p { color: var(--text) !important; }
+.lb-found { list-style: none; padding: 0; margin: 0 0 8px; color: var(--muted); font-size: .9rem; }
+.lb-found li { display: flex; align-items: center; gap: 6px; padding: 2px 0; overflow-wrap: anywhere; }
+.lb-found .ico { color: var(--ok); width: 18px; height: 18px; }
+.lb-msg + .btn { margin-top: 8px; }
+.lb-bar { height: 12px; border-radius: 6px; background: var(--surface-2); overflow: hidden; margin: 10px 0 6px; }
+.lb-bar-fill { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 6px; transition: width .3s; }
+.card.pad p.lb-bar-text { margin: 0; font-weight: 650; color: var(--text); font-variant-numeric: tabular-nums; }
+.lb-current { min-height: 1.4em; margin: 4px 0 8px !important; overflow-wrap: anywhere; }
+.lb-summary { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+.lb-count { font-size: .84rem; padding: .3em .7em; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
+.lb-count strong { color: var(--text); }
+.lb-imported, .lb-moved { background: var(--ok-soft); }
+.lb-count.lb-review { background: var(--warn-soft); }
+.lb-review.lb-count strong { color: var(--warn); }
+.lb-item { padding: 12px 12px 10px; margin-bottom: 12px; }
+.lb-item-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.lb-name { font-weight: 700; font-size: 1.04rem; overflow-wrap: anywhere; }
+.lb-cands { box-shadow: none; }
+.lb-cands .row { min-height: 70px; }
+.lb-item .hint { margin: 6px 2px; }
+.lb-search { margin-top: 8px; }
+.lb-search .btn { padding: 0 14px; }
+.lb-done .btn { margin-top: 8px; }

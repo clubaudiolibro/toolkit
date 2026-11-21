@@ -270,6 +270,23 @@ Solo tema chiaro, accento `#8a3fb8` (colore della categoria Film). Stessa strutt
   numeri principali (film visti, ore, voto medio), film per anno e per mese (scelta dell'anno; i film senza data non
   contano), generi più visti, distribuzione dei voti (19 gradini), ore per luogo (un film in più luoghi conta per
   ciascuno, più «Non indicato»), watchlist (numero, durata media e totale).
+- **Esporta CSV** (Altro, `js/export.js`): `filmshelf-AAAA-MM-GG.csv` con tutti i film e tutte le colonne della
+  tabella (separatore `;`, UTF-8 con BOM, voto con la virgola, generi e luoghi separati da ` | `).
+- **Import da Letterboxd** (Altro → «Importa da Letterboxd», `#/altro/importa-letterboxd`). **Sezione isolata** nella
+  cartella `apps/filmshelf/import-letterboxd/`: per toglierla si cancella la cartella, le due righe segnate
+  «import Letterboxd» in `app.js`, il blocco con lo stesso commento in `js/views/altro.js` e i suoi file
+  dall'elenco `CORE` del service worker.
+  - Si caricano lo zip dell'export o `watched.csv` (base), `ratings.csv` (voti), `diary.csv` (date); lettura solo nel
+    browser. Valgono solo i file con quei nomi nella cartella principale (watchlist.csv, likes/, deleted/ e orphaned/
+    hanno le stesse colonne ma vengono ignorati). Collegamento tra i file per titolo + anno.
+  - Voto ×2 (½–5 stelle → 1–10; se manca in ratings si usa quello del diario); data = visione più recente nel diario,
+    altrimenti vuota; luoghi vuoti.
+  - Per ogni film: ricerca TMDB con titolo e anno (se non trova nulla, senza anno). Abbinamento automatico solo se
+    c'è esattamente un risultato con lo stesso anno e lo stesso titolo (originale o italiano, senza accenti e
+    punteggiatura); altrimenti «Da rivedere», dove si sceglie tra i candidati, si cerca un altro titolo o si salta.
+  - Avanzamento salvato nel browser dopo ogni film (`filmshelf.import.letterboxd`): si può mettere in pausa, chiudere
+    e riprendere. Mai duplicati (controllo su `tmdb_id`): un film già visto resta com'è, uno in watchlist passa tra
+    i visti con data e voto. Barra di avanzamento; le chiamate TMDB passano dalla coda da 260 ms.
 - **Senza rete:** una copia dei film è salvata nel browser (`localStorage`, chiave `filmshelf.cache`) e viene mostrata
   in sola lettura.
 - **Crediti:** Altro → «Crediti e informazioni», con logo TMDB e la dicitura richiesta.

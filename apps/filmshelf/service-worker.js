@@ -11,7 +11,7 @@
  * dell'app, aggiornando anche l'elenco CORE. All'attivazione vengono cancellate solo le vecchie
  * cache con prefisso "filmshelf-app-" (mai quelle delle altre app).
  */
-const CACHE_VERSION = 'filmshelf-app-v3';
+const CACHE_VERSION = 'filmshelf-app-v4';
 const APP_CACHE_PREFIX = 'filmshelf-app-';
 
 const CORE = [
@@ -23,11 +23,16 @@ const CORE = [
   './icons/icon-maskable-512.png',
   './icons/icon.svg',
   './icons/maskable.svg',
+  './import-letterboxd/import.css',
+  './import-letterboxd/import.js',
+  './import-letterboxd/letterboxd.js',
   './index.html',
   './js/actions.js',
   './js/components.js',
   './js/config.js',
+  './js/csv.js',
   './js/db.js',
+  './js/export.js',
   './js/store.js',
   './js/tmdb.js',
   './js/ui.js',

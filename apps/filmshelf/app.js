@@ -11,6 +11,7 @@ import * as film from './js/views/film.js';
 import * as add from './js/views/add.js';
 import * as altro from './js/views/altro.js';
 import * as stats from './js/views/stats.js';
+import * as importLetterboxd from './import-letterboxd/import.js';   // import Letterboxd (sezione rimovibile)
 
 const TABS = [
   { id: 'visti', label: 'Visti', icon: 'film' },
@@ -28,6 +29,7 @@ const ROUTES = [
   [/^aggiungi$/, add, 'aggiungi'],
   [/^statistiche$/, stats, 'statistiche'],
   [/^altro$/, altro, 'altro'],
+  [/^altro\/importa-letterboxd$/, importLetterboxd, 'altro'],   // import Letterboxd (sezione rimovibile)
 ];
 
 const $ = id => document.getElementById(id);

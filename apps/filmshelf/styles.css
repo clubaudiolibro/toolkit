@@ -455,3 +455,9 @@ a.row.compact:active { background: var(--accent-softer); }
 .cols.small { gap: 2px; }
 .cols.small .col-value { font-size: .62rem; }
 .stats-inline .stat-value { font-size: 1.35rem; white-space: nowrap; }
+
+/* Collegamento a forma di scheda (Altro) */
+.row-link { display: flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; }
+.row-link:active { background: var(--accent-softer); }
+.row-link .row-title, .row-link .row-sub { display: block; }
+.row-link .chev { color: var(--faint); }
