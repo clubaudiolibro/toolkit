@@ -1,4 +1,4 @@
-/* TOOLBOX ALESSANDRO — homepage: card, filtri, in evidenza, tema, installazione */
+/* TOOLBOX ALESSANDRO — homepage: card, filtri, tema, installazione */
 "use strict";
 (function () {
   const THEME_KEY = "toolbox.theme";
@@ -76,16 +76,6 @@
 
     a.append(top, body, open);
     return a;
-  }
-
-  /* ---------- In evidenza ---------- */
-  function renderFeatured() {
-    const feat = LIST.filter(a => a.featured);
-    const sec = document.getElementById("featured-section");
-    const grid = document.getElementById("featured-grid");
-    grid.textContent = "";
-    feat.forEach(app => grid.appendChild(card(app)));
-    sec.hidden = feat.length === 0;
   }
 
   /* ---------- Registro delle versioni ---------- */
@@ -188,7 +178,6 @@
     document.getElementById("btn-theme").addEventListener("click", () => applyTheme(NEXT_THEME[currentTheme()]));
     mq.addEventListener("change", () => { if (currentTheme() === "auto") applyTheme("auto"); });
 
-    renderFeatured();
     renderFilters();
     renderChangelog();
 

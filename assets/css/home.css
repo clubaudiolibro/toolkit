@@ -92,7 +92,6 @@ main{flex:1}
 
 /* Griglia */
 .app-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:18px;padding-bottom:40px}
-.app-grid.featured{padding-bottom:20px}
 
 /* Card */
 .app-card{
@@ -106,7 +105,6 @@ main{flex:1}
 .app-card::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:var(--cat-fg)}
 .app-card:hover{border-color:color-mix(in srgb,var(--cat-fg) 55%,var(--border));box-shadow:var(--shadow-hover);transform:translateY(-2px)}
 .app-card:active{transform:translateY(0)}
-.featured .app-card{background:linear-gradient(160deg,color-mix(in srgb,var(--cat-fg) 10%,var(--surface)),var(--surface) 65%)}
 .app-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .app-icon{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--cat-fg) 14%,transparent);color:var(--cat-fg);flex:none}
 .app-icon svg{width:24px;height:24px}
