@@ -1,4 +1,4 @@
-/* TOOLBOX ALESSANDRO — homepage: card, filtri, in evidenza, tema, installazione */
+/* TOOLBOX ALESSANDRO — homepage: card, filtri, tema, installazione */
 "use strict";
 (function () {
   const THEME_KEY = "toolbox.theme";
@@ -78,16 +78,6 @@
     return a;
   }
 
-  /* ---------- In evidenza ---------- */
-  function renderFeatured() {
-    const feat = LIST.filter(a => a.featured);
-    const sec = document.getElementById("featured-section");
-    const grid = document.getElementById("featured-grid");
-    grid.textContent = "";
-    feat.forEach(app => grid.appendChild(card(app)));
-    sec.hidden = feat.length === 0;
-  }
-
   /* ---------- Registro delle versioni ---------- */
   function renderChangelog() {
     const list = document.getElementById("changelog-list");
@@ -98,6 +88,22 @@
     LIST.forEach(a => { names[a.id] = a.title; });
     names.toolbox = "Toolbox";
     list.textContent = "";
+    const VISIBLE = 3;
+    let expanded = false;
+    let more = document.getElementById("changelog-more");
+    if (!more) {
+      more = el("button", "log-more");
+      more.id = "changelog-more";
+      more.type = "button";
+      list.insertAdjacentElement("afterend", more);
+      more.addEventListener("click", () => { expanded = !expanded; apply(); });
+    }
+    function apply() {
+      Array.from(list.children).forEach((li, i) => { li.hidden = !expanded && i >= VISIBLE; });
+      more.hidden = log.length <= VISIBLE;
+      more.textContent = expanded ? "Mostra meno" : "Mostra tutto (" + log.length + ")";
+      more.setAttribute("aria-expanded", String(expanded));
+    }
     log.forEach(e => {
       const li = el("li");
       const d = new Date(e.date + "T12:00:00");
@@ -106,6 +112,7 @@
       li.appendChild(el("span", null, e.text));
       list.appendChild(li);
     });
+    apply();
   }
 
   /* ---------- Filtri + griglia ---------- */
@@ -171,7 +178,6 @@
     document.getElementById("btn-theme").addEventListener("click", () => applyTheme(NEXT_THEME[currentTheme()]));
     mq.addEventListener("change", () => { if (currentTheme() === "auto") applyTheme("auto"); });
 
-    renderFeatured();
     renderFilters();
     renderChangelog();
 
