@@ -98,6 +98,22 @@
     LIST.forEach(a => { names[a.id] = a.title; });
     names.toolbox = "Toolbox";
     list.textContent = "";
+    const VISIBLE = 3;
+    let expanded = false;
+    let more = document.getElementById("changelog-more");
+    if (!more) {
+      more = el("button", "log-more");
+      more.id = "changelog-more";
+      more.type = "button";
+      list.insertAdjacentElement("afterend", more);
+      more.addEventListener("click", () => { expanded = !expanded; apply(); });
+    }
+    function apply() {
+      Array.from(list.children).forEach((li, i) => { li.hidden = !expanded && i >= VISIBLE; });
+      more.hidden = log.length <= VISIBLE;
+      more.textContent = expanded ? "Mostra meno" : "Mostra tutto (" + log.length + ")";
+      more.setAttribute("aria-expanded", String(expanded));
+    }
     log.forEach(e => {
       const li = el("li");
       const d = new Date(e.date + "T12:00:00");
@@ -106,6 +122,7 @@
       li.appendChild(el("span", null, e.text));
       list.appendChild(li);
     });
+    apply();
   }
 
   /* ---------- Filtri + griglia ---------- */

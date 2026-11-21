@@ -86,6 +86,7 @@ const APPS = [
           version, text (descrizione brevissima).
    ===================================================================== */
 const CHANGELOG = [
+  { date: "2026-11-21", app: "toolbox", version: "1.4", text: "Registro delle versioni: di default mostra solo le ultime 3 voci, con il pulsante «Mostra tutto» per vedere lo storico." },
   { date: "2026-11-21", app: "gymlog", version: "1.6", text: "Schede degli allenamenti più compatte, nodo espandibile «Istruzioni» (come si esegue, errori da evitare, video) anche durante l'allenamento; campi rinominati; tolte le scritte «null» dai fogli di scelta." },
   { date: "2026-11-15", app: "gymlog", version: "1.5", text: "Misure corporee (Altro → Misure corporee): peso e circonferenze del lato destro con sagoma e istruzioni, un grafico, storico e promemoria dopo 15 giorni (peso) e 30 (circonferenze). Richiede di rilanciare supabase/gymlog.sql (schema 4)." },
   { date: "2026-11-15", app: "gymlog", version: "1.4", text: "Fase 5: backup (esporta in JSON e CSV per Excel, ripristino sicuro) con avviso se manca da più di 30 giorni." },

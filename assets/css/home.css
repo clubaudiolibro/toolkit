@@ -136,6 +136,9 @@ main{flex:1}
 .logbook .log-date{color:var(--faint);font-variant-numeric:tabular-nums}
 .logbook strong{color:var(--muted);font-weight:600}
 .logbook li span{color:var(--muted);flex-basis:100%}
+.logbook li[hidden]{display:none}
+.logbook .log-more{margin-top:12px;padding:8px 14px;font:inherit;color:var(--muted);background:transparent;border:1px solid var(--faint);border-radius:999px;cursor:pointer}
+.logbook .log-more:hover{color:var(--text);border-color:var(--muted)}
 
 /* Smartphone */
 @media (max-width:640px){
