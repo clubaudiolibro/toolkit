@@ -7,6 +7,7 @@ Web app statica (PWA installabile) che raccoglie:
 - **Postcard audiolibri** — `apps/postcard-audiolibri/`
 - **TabShelf** — `apps/tabshelf/` (libreria di tablature con tag e filtri: si carica dal PC, si studia dal tablet; dati e file su Supabase. Guida completa più sotto)
 - **GymLog** — `apps/gymlog/` (registro degli allenamenti in palestra, pensato per il telefono; dati su Supabase. Vedi «GymLog» più sotto)
+- **FilmShelf** — `apps/filmshelf/` (film visti e watchlist con ricerca su TMDB, pensato per il telefono; dati su Supabase. Vedi «FilmShelf» più sotto)
 - `apps/tablature/` — contiene solo il reindirizzamento a TabShelf della vecchia *Guitar Tab Library* (vedi «Vecchia Guitar Tab Library»)
 
 Nessun build step e nessun framework: HTML, CSS e JavaScript (moduli ES) con percorsi relativi.
@@ -236,3 +237,60 @@ Solo tema chiaro, accento `#b0506e` (colore della categoria Benessere).
   - Su iPhone con l'app installata sulla Home i file si salvano dal foglio «Condividi» (Salva su File).
   - Avviso in Oggi e in Altro se l'ultimo backup ha più di 30 giorni o non è mai stato fatto (e ci sono dati).
 - `APP_VERSION` in `apps/gymlog/js/config.js` va tenuta uguale alla versione di `gymlog` in `assets/js/apps.js`.
+
+## FilmShelf
+
+Database personale dei film visti e della watchlist (sezione Film), pensato prima per il telefono.
+Solo tema chiaro, accento `#8a3fb8` (colore della categoria Film). Stessa struttura di GymLog.
+
+- **Database:** `supabase/filmshelf.sql` (una volta sola nel SQL Editor; rilanciabile senza perdere dati).
+  Tabelle con prefisso `filmshelf_`, RLS attiva (ognuno vede solo le proprie righe), nessun accesso per `anon`.
+  - `filmshelf_film`: una riga per film (una sola visione: se lo si rivede si aggiornano data e voto).
+    `tmdb_id` unico per utente; `stato` `visto` | `watchlist`; `voto` 1–10 a passi di 0,5; `luoghi` solo
+    `Cinema`, `The Space Pass`, `Casa`; `aggiornato_il` si aggiorna da solo.
+  - `filmshelf_impostazioni`: la chiave TMDB (una riga per utente).
+  - Versione dello schema in `filmshelf_schema_version()` e in `SCHEMA_VERSION` di `apps/filmshelf/js/config.js` (attuale: 1).
+- **Chiave TMDB:** non è mai nel codice. La prima volta l'app la chiede (Aggiungi o Altro), la prova su TMDB e la
+  salva in `filmshelf_impostazioni`; dopo il login la legge e chiama TMDB direttamente dal browser.
+  Vanno bene sia la «Chiave API» (32 caratteri, inviata come `api_key`) sia il «Token di accesso in lettura»
+  (`eyJ…`, inviato come `Authorization: Bearer`).
+- **TMDB** (`js/tmdb.js`): lingua `it-IT`; ricerca `search/movie` mentre si scrive (attesa 300 ms); dettagli
+  `movie/{id}` con `append_to_response=translations` (trama inglese se manca quella italiana). Tutte le chiamate
+  passano da una coda con almeno 260 ms tra l'una e l'altra (limite TMDB ≈ 40 ogni 10 s); su 429 aspetta e riprova.
+- **Locandine:** si salva solo `poster_path`; l'immagine si carica da `image.tmdb.org` (`w185` elenchi, `w500` scheda)
+  con lazy loading. Senza rete compare un riquadro con l'icona della pellicola.
+- **Elenchi** (`js/views/films.js`, uguali per visti e watchlist): tre modalità — griglia di copertine, lista compatta,
+  schede — scelte con il selettore in alto a destra (ultima scelta in `localStorage`, chiave `filmshelf.view`).
+  Ricerca su titolo italiano e originale (senza badare ad accenti e maiuscole) e ordinamento sempre in cima:
+  visti per data di visione, voto, titolo, anno; watchlist per data di aggiunta, titolo, anno, durata; un tasto
+  inverte il verso; i valori mancanti vanno sempre in fondo (scelta ricordata in `filmshelf.sort.<stato>`).
+- **Scheda del film** (`#/film/<id>`, `js/views/film.js`): tutti i dati, «Modifica» (data, voto, luoghi, note),
+  «Elimina» con conferma, «Sposta in watchlist»; per la watchlist «Segna come visto».
+- **Statistiche** (`js/views/stats.js`, grafici in HTML/CSS senza librerie, un solo colore con i valori scritti):
+  numeri principali (film visti, ore, voto medio), film per anno e per mese (scelta dell'anno; i film senza data non
+  contano), generi più visti, distribuzione dei voti (19 gradini), ore per luogo (un film in più luoghi conta per
+  ciascuno, più «Non indicato»), watchlist (numero, durata media e totale).
+- **Esporta CSV** (Altro, `js/export.js`): `filmshelf-AAAA-MM-GG.csv` con tutti i film e tutte le colonne della
+  tabella (separatore `;`, UTF-8 con BOM, voto con la virgola, generi e luoghi separati da ` | `).
+- **Import da Letterboxd** (Altro → «Importa da Letterboxd», `#/altro/importa-letterboxd`). **Sezione isolata** nella
+  cartella `apps/filmshelf/import-letterboxd/`: per toglierla si cancella la cartella, le due righe segnate
+  «import Letterboxd» in `app.js`, il blocco con lo stesso commento in `js/views/altro.js` e i suoi file
+  dall'elenco `CORE` del service worker.
+  - Si caricano lo zip dell'export o `watched.csv` (base), `ratings.csv` (voti), `diary.csv` (date); lettura solo nel
+    browser. Valgono solo i file con quei nomi nella cartella principale (watchlist.csv, likes/, deleted/ e orphaned/
+    hanno le stesse colonne ma vengono ignorati). Collegamento tra i file per titolo + anno.
+  - Voto ×2 (½–5 stelle → 1–10; se manca in ratings si usa quello del diario); data = visione più recente nel diario,
+    altrimenti vuota; luoghi vuoti.
+  - Per ogni film: ricerca TMDB con titolo e anno (se non trova nulla, senza anno). Abbinamento automatico solo se
+    c'è esattamente un risultato con lo stesso anno e lo stesso titolo (originale o italiano, senza accenti e
+    punteggiatura); altrimenti «Da rivedere», dove si sceglie tra i candidati, si cerca un altro titolo o si salta.
+  - Avanzamento salvato nel browser dopo ogni film (`filmshelf.import.letterboxd`): si può mettere in pausa, chiudere
+    e riprendere. Mai duplicati (controllo su `tmdb_id`): un film già visto resta com'è, uno in watchlist passa tra
+    i visti con data e voto. Barra di avanzamento; le chiamate TMDB passano dalla coda da 260 ms.
+- **Senza rete:** una copia dei film è salvata nel browser (`localStorage`, chiave `filmshelf.cache`) e viene mostrata
+  in sola lettura.
+- **Crediti:** Altro → «Crediti e informazioni», con logo TMDB e la dicitura richiesta.
+- **Installazione (PWA):** `manifest.json` + `service-worker.js` (cache `filmshelf-app-*`, prima la rete; non tocca
+  mai Supabase né TMDB). **`CACHE_VERSION`** va incrementata quando si aggiungono, rinominano o tolgono file,
+  aggiornando l'elenco `CORE`.
+- `APP_VERSION` in `apps/filmshelf/js/config.js` va tenuta uguale alla versione di `filmshelf` in `assets/js/apps.js`.
