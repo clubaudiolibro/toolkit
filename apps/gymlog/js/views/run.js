@@ -1,41 +1,12 @@
 /**
- * run.js — esecuzione di un allenamento: valori dell'ultima volta modificabili al volo, note,
+ * run.js — esecuzione di un allenamento: valori dell'ultima volta modificabili al volo, istruzioni dell'esercizio,
  * spunte (salvate sul telefono) e «Allenamento completato».
  */
 import { el, icon, toast, confirmDialog, todayIso, fmtDate } from '../ui.js';
-import { getWorkout, workoutItems, getGroup, groupItems, getExercise, updateExerciseNotes, addDiaryEntry, setDiaryStars } from '../store.js';
-import { valuesEditor, actionMenu, askStars } from '../components.js';
+import { getWorkout, workoutItems, getGroup, groupItems, getExercise, addDiaryEntry, setDiaryStars } from '../store.js';
+import { valuesEditor, exerciseInfo, actionMenu, askStars } from '../components.js';
 import { getChecked, setChecked, clearProgress } from '../progress.js';
 import { hold, release } from '../wakelock.js';
-
-/** Note dell'esercizio, modificabili da qui (si salvano subito e valgono ovunque). */
-function notesEditor(ex) {
-  const box = el('div', { class: 'notes' });
-  let editing = false;
-  const draw = () => {
-    box.textContent = '';
-    if (!editing) {
-      box.appendChild(ex.notes
-        ? el('button', { type: 'button', class: 'notes-view', on: { click: () => { editing = true; draw(); } } },
-          el('span', { class: 'notes-label', text: 'Note' }), el('span', { class: 'notes-text', text: ex.notes }))
-        : el('button', { type: 'button', class: 'link-btn', on: { click: () => { editing = true; draw(); } } }, icon('plus'), 'Nota'));
-      return;
-    }
-    const ta = el('textarea', { class: 'input', value: ex.notes || '', placeholder: 'Es. sedile al 4, gomiti stretti', 'aria-label': 'Note di ' + ex.name });
-    const save = async () => {
-      const v = ta.value.trim();
-      if (v === (ex.notes || '')) { editing = false; draw(); return; }
-      try { await updateExerciseNotes(ex.id, v); editing = false; draw(); toast('Nota salvata', 'ok'); }
-      catch (e) { ta.classList.add('invalid'); }
-    };
-    box.append(ta, el('div', { class: 'notes-actions' },
-      el('button', { type: 'button', class: 'btn btn-sm', text: 'Annulla', on: { click: () => { editing = false; draw(); } } }),
-      el('button', { type: 'button', class: 'btn btn-sm btn-primary', text: 'Salva nota', on: { click: save } })));
-    setTimeout(() => ta.focus(), 30);
-  };
-  draw();
-  return box;
-}
 
 export async function render(ctx) {
   const w = getWorkout(ctx.params[0]);
@@ -81,7 +52,7 @@ export async function render(ctx) {
     li.append(
       el('div', { class: 'item-head' }, box, el('span', { class: 'item-name', text: ex.name })),
       valuesEditor(kind, item),
-      notesEditor(ex));
+      exerciseInfo(ex));
     return li;
   };
 

@@ -2,7 +2,7 @@
  * components.js — pezzi di interfaccia riusati in più schermate:
  * modifica di serie/ripetizioni/peso (+ riscaldamento), scelta da un elenco, ordinamento a trascinamento.
  */
-import { el, icon, norm, customSheet } from './ui.js';
+import { el, icon, norm, customSheet, safeUrl } from './ui.js';
 import { updateItemValues, hasWarmup } from './store.js';
 
 /* ---------------------------------------------------------------------
@@ -203,6 +203,26 @@ export function dragHandle(label) {
    Scheda di un esercizio con i suoi valori (in un gruppo o in un allenamento)
    --------------------------------------------------------------------- */
 /**
+ * Nodo espandibile con «Come si esegue», «Errori da evitare» e link al video (solo ciò che c'è).
+ * Restituisce null se l'esercizio non ha nessuna di queste informazioni.
+ */
+export function exerciseInfo(ex) {
+  const how = (ex.description || '').trim();
+  const mistakes = (ex.notes || '').trim();
+  const url = safeUrl(ex.video_url);
+  if (!how && !mistakes && !url) return null;
+  const block = (title, text, cls = '') => el('div', { class: 'info-block ' + cls }, el('span', { class: 'info-label', text: title }), el('p', { class: 'info-text', text }));
+  return el('details', { class: 'ex-info' },
+    el('summary', {}, icon('chevron', 'ico chev'), el('span', { text: 'Istruzioni' }), url ? icon('video', 'ico vid') : null),
+    el('div', { class: 'info-body' },
+      how ? block('Come si esegue', how) : null,
+      mistakes ? block('Errori da evitare', mistakes, 'warn') : null,
+      el('div', { class: 'info-actions' },
+        url ? el('a', { class: 'btn btn-sm', href: url, target: '_blank', rel: 'noopener noreferrer' }, icon('video'), 'Guarda il video') : null,
+        el('a', { class: 'btn btn-sm', href: '#/esercizi/' + ex.id }, icon('edit'), 'Modifica'))));
+}
+
+/**
  * opts: { exercise, kind ('group'|'workout'), item, sortable (mostra maniglia), onRemove (facoltativo) }
  */
 export function exerciseCard({ exercise, kind, item, sortable, onRemove, removeLabel }) {
@@ -212,7 +232,8 @@ export function exerciseCard({ exercise, kind, item, sortable, onRemove, removeL
       el('span', { class: 'item-name', text: exercise.name }),
       onRemove ? el('button', { type: 'button', class: 'icon-btn muted', 'aria-label': removeLabel || ('Togli ' + exercise.name),
         on: { click: onRemove } }, icon('close')) : null),
-    valuesEditor(kind, item));
+    valuesEditor(kind, item),
+    exerciseInfo(exercise));
 }
 
 /* ---------------------------------------------------------------------

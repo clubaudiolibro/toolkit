@@ -1,16 +1,7 @@
 /** exercise-edit.js — scheda di un esercizio (nuovo o esistente). */
-import { el, icon, toast, confirmDialog, promptDialog } from '../ui.js';
+import { el, icon, toast, confirmDialog, promptDialog, safeUrl } from '../ui.js';
 import { state, getExercise, createExercise, updateExercise, trashExercise, addListItem, exerciseUsage } from '../store.js';
 import { EFFICACY } from '../config.js';
-
-/** Restituisce l'URL se è un indirizzo web valido (aggiunge https:// se manca), altrimenti null. */
-export function safeUrl(raw) {
-  let s = String(raw || '').trim();
-  if (!s) return null;
-  if (!/^https?:\/\//i.test(s)) s = 'https://' + s;
-  try { const u = new URL(s); return /^https?:$/.test(u.protocol) && u.hostname.includes('.') ? u.href : null; }
-  catch (e) { return null; }
-}
 
 export function render(ctx) {
   const id = ctx.params[0] || null;
@@ -110,8 +101,8 @@ export function render(ctx) {
   };
 
   /* --- Testi --- */
-  const description = el('textarea', { class: 'input', value: f.description, placeholder: 'Come si esegue', on: { input: () => { f.description = description.value; } } });
-  const notes = el('textarea', { class: 'input', value: f.notes, placeholder: 'Es. tenere i gomiti stretti', on: { input: () => { f.notes = notes.value; } } });
+  const description = el('textarea', { class: 'input', value: f.description, placeholder: 'Posizione di partenza, movimento, respirazione…', on: { input: () => { f.description = description.value; } } });
+  const notes = el('textarea', { class: 'input', value: f.notes, placeholder: 'Es. dondolare con il busto, gomiti che si muovono…', on: { input: () => { f.notes = notes.value; } } });
 
   /* --- Video --- */
   const openVideo = el('a', { class: 'btn', target: '_blank', rel: 'noopener noreferrer', 'aria-label': 'Apri il video' }, icon('video'), 'Apri');
@@ -151,8 +142,8 @@ export function render(ctx) {
     el('div', { class: 'field' }, el('span', { class: 'field-label', text: 'Attrezzo' }), eqBox),
     el('div', { class: 'field' }, el('span', { class: 'field-label', html: 'Efficacia <span class="opt">(tocca di nuovo per togliere)</span>' }), effBox),
     el('div', { class: 'field' }, el('span', { class: 'field-label', html: 'Video <span class="opt">(facoltativo)</span>' }), el('div', { class: 'inline' }, video, openVideo)),
-    el('div', { class: 'field' }, el('span', { class: 'field-label', text: 'Descrizione' }), description),
-    el('div', { class: 'field' }, el('span', { class: 'field-label', text: 'Note' }), notes),
+    el('div', { class: 'field' }, el('span', { class: 'field-label', text: 'Come si esegue' }), description),
+    el('div', { class: 'field' }, el('span', { class: 'field-label', text: 'Errori da evitare' }), notes),
     el('div', { class: 'form-actions' }, saveBtn));
 
   if (ex) {

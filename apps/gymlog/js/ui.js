@@ -116,6 +116,7 @@ function openSheet(build) {
     const onKey = e => { if (e.key === 'Escape') close(undefined); };
     backdrop.addEventListener('click', e => { if (e.target === backdrop) close(undefined); });
     document.addEventListener('keydown', onKey);
+    sheet.append = (...nodes) => append(sheet, nodes);   // ignora null/false invece di scriverli come testo
     build(sheet, close);
     document.body.appendChild(backdrop);
     requestAnimationFrame(() => backdrop.classList.add('open'));
@@ -159,6 +160,15 @@ export function promptDialog({ title, label, value = '', placeholder = '', ok = 
 
 /** Foglio libero: build(sheet, close) costruisce il contenuto. */
 export function customSheet(build) { return openSheet(build); }
+
+/** Restituisce l'URL se è un indirizzo web valido (aggiunge https:// se manca), altrimenti null. */
+export function safeUrl(raw) {
+  let s = String(raw || '').trim();
+  if (!s) return null;
+  if (!/^https?:\/\//i.test(s)) s = 'https://' + s;
+  try { const u = new URL(s); return /^https?:$/.test(u.protocol) && u.hostname.includes('.') ? u.href : null; }
+  catch (e) { return null; }
+}
 
 /* ---------- Date ---------- */
 const pad = n => String(n).padStart(2, '0');
