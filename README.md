@@ -259,6 +259,13 @@ Solo tema chiaro, accento `#8a3fb8` (colore della categoria Film). Stessa strutt
   passano da una coda con almeno 260 ms tra l'una e l'altra (limite TMDB ≈ 40 ogni 10 s); su 429 aspetta e riprova.
 - **Locandine:** si salva solo `poster_path`; l'immagine si carica da `image.tmdb.org` (`w185` elenchi, `w500` scheda)
   con lazy loading. Senza rete compare un riquadro con l'icona della pellicola.
+- **Elenchi** (`js/views/films.js`, uguali per visti e watchlist): tre modalità — griglia di copertine, lista compatta,
+  schede — scelte con il selettore in alto a destra (ultima scelta in `localStorage`, chiave `filmshelf.view`).
+  Ricerca su titolo italiano e originale (senza badare ad accenti e maiuscole) e ordinamento sempre in cima:
+  visti per data di visione, voto, titolo, anno; watchlist per data di aggiunta, titolo, anno, durata; un tasto
+  inverte il verso; i valori mancanti vanno sempre in fondo (scelta ricordata in `filmshelf.sort.<stato>`).
+- **Scheda del film** (`#/film/<id>`, `js/views/film.js`): tutti i dati, «Modifica» (data, voto, luoghi, note),
+  «Elimina» con conferma, «Sposta in watchlist»; per la watchlist «Segna come visto».
 - **Senza rete:** una copia dei film è salvata nel browser (`localStorage`, chiave `filmshelf.cache`) e viene mostrata
   in sola lettura.
 - **Crediti:** Altro → «Crediti e informazioni», con logo TMDB e la dicitura richiesta.

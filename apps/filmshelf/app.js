@@ -2,11 +2,12 @@
  * app.js — avvio di FilmShelf e navigazione tra le schermate (indirizzi con #/...).
  * Stessa struttura di GymLog: barra delle sezioni in basso sul telefono, in alto sul PC.
  */
-import { initDb, schemaVersion } from './js/db.js';
+import { initDb, schemaVersion, DbError } from './js/db.js';
 import * as store from './js/store.js';
 import { SCHEMA_VERSION } from './js/config.js';
 import { el, icon, confirmDialog } from './js/ui.js';
 import * as films from './js/views/films.js';
+import * as film from './js/views/film.js';
 import * as add from './js/views/add.js';
 import * as altro from './js/views/altro.js';
 
@@ -21,6 +22,7 @@ const TABS = [
 const ROUTES = [
   [/^visti$/, films, 'visti'],
   [/^watchlist$/, films, 'watchlist'],
+  [/^film\/([0-9a-f-]{36})$/, film, null],
   [/^aggiungi$/, add, 'aggiungi'],
   [/^altro$/, altro, 'altro'],
 ];
@@ -105,6 +107,11 @@ async function route(force = false) {
   currentHash = hash;
   leaveGuard = null;
   if (cleanup) { try { cleanup(); } catch (e) { /* niente */ } cleanup = null; }
+  // la scheda di un film resta sotto la sezione da cui si arriva (visti o watchlist)
+  if (match.tab === null) {
+    const f = store.get(match.params[0]);
+    match.tab = f && f.stato === 'watchlist' ? 'watchlist' : 'visti';
+  }
   setActiveTab(match.tab);
   const ctx = makeCtx(match.params, path);
   ctx.setBack(null);
@@ -152,6 +159,15 @@ function watchConnection() {
   return update;
 }
 
+/** Altezza della barra in alto in una variabile CSS: serve alla barra di ricerca che resta attaccata sotto. */
+function trackHeaderHeight() {
+  const top = document.querySelector('.top');
+  const set = () => document.documentElement.style.setProperty('--top-h', top.offsetHeight + 'px');
+  set();
+  if ('ResizeObserver' in window) new ResizeObserver(set).observe(top);
+  else window.addEventListener('resize', set);
+}
+
 function registerServiceWorker() {
   if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
   navigator.serviceWorker.register('./service-worker.js').catch(e => console.warn('Service worker non registrato', e));
@@ -164,8 +180,11 @@ function tryOffline() {
 }
 
 async function start() {
+  // gli errori del database sono già stati mostrati con un avviso: non serve altro
+  window.addEventListener('unhandledrejection', e => { if (e.reason instanceof DbError) e.preventDefault(); });
   registerServiceWorker();
   renderTabs();
+  trackHeaderHeight();
   const updateBanner = watchConnection();
   const view = $('view');
   try {
@@ -174,7 +193,7 @@ async function start() {
     if (v == null || v < SCHEMA_VERSION) { showSetup(v); return; }
     await store.loadAll();
   } catch (e) {
-    console.error(e);
+    console.warn('Supabase non raggiungibile:', e.message);
     if (!tryOffline()) {
       view.textContent = '';
       view.appendChild(el('div', { class: 'placeholder' },
