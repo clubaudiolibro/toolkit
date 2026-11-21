@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="it" data-cat="audiolibri">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#f6f5f2">
+<meta name="theme-color" content="#f7f7f5">
 <meta name="description" content="Dashboard locale per analizzare l'archivio personale di audiolibri esportato da Notion">
 <title>Diario degli Audiolibri — Dashboard</title>
 <!-- Dashboard Audiolibri: PWA, icone e navigazione comune (percorsi relativi) -->
@@ -12,43 +12,32 @@
 <link rel="icon" href="../../assets/icons/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="../../assets/icons/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="../../assets/icons/apple-touch-icon.png">
+<script src="../../assets/js/toolkit-theme.js"></script>
+<link rel="stylesheet" href="../../assets/css/toolkit.css">
 <link rel="stylesheet" href="../../assets/css/app-nav.css">
 <!-- Unica libreria esterna: Chart.js (grafici). Il CSV non viene mai inviato: la CDN serve solo il codice della libreria. -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 /* =========================================================
-   TEMI — variabili CSS (chiaro, scuro, carta, biblioteca)
+   TEMI — colori, font e angoli da assets/css/toolkit.css
+   (tema chiaro/scuro condiviso con la Toolbox; --accent arriva dal colore principale scelto)
    ========================================================= */
 :root{
   --accent:#2f6f62; --accent-ink:#ffffff;
-  --bg:#f6f5f2; --surface:#ffffff; --surface-2:#f1efea; --border:#e3dfd6;
-  --text:#1f2328; --muted:#5d6470; --faint:#8a909a; --grid:rgba(31,35,40,.08);
+  --bg:var(--tk-bg); --surface:var(--tk-surface); --surface-2:var(--tk-surface-2); --border:var(--tk-line);
+  --text:var(--tk-text); --muted:var(--tk-muted); --faint:var(--tk-faint); --grid:rgba(22,24,27,.08);
   --warn:#9a6400; --warn-bg:#fff4dc; --err:#a3352f; --err-bg:#fde8e6; --info:#2f5f9a; --info-bg:#e7effa; --ok:#2f7d4f; --ok-bg:#e4f4ea;
-  --shadow:0 1px 2px rgba(20,20,20,.04),0 4px 16px rgba(20,20,20,.05);
-  --radius:14px; --gap:18px; --pad:20px;
-  --font-sans:"Inter","Segoe UI Variable","Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
-  --font-serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;
-  --font-mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
-  color-scheme:light;
+  --shadow:none;
+  --radius:10px; --gap:16px; --pad:20px;
+  --font-sans:var(--tk-font);
+  --font-serif:var(--tk-font);
+  --font-mono:var(--tk-mono);
 }
 [data-theme="dark"]{
-  --bg:#121417; --surface:#1a1d21; --surface-2:#22262b; --border:#2e333a;
-  --text:#e8eaed; --muted:#a5adb8; --faint:#7d8590; --grid:rgba(232,234,237,.08);
+  --grid:rgba(236,238,241,.08);
   --warn:#f0b54a; --warn-bg:#3a2d12; --err:#f08a80; --err-bg:#3d1f1c; --info:#8fb6ec; --info-bg:#1b2a3d; --ok:#7fd1a0; --ok-bg:#16301f;
-  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25); color-scheme:dark;
 }
-[data-theme="paper"]{
-  --bg:#f3ece0; --surface:#fbf7ef; --surface-2:#efe6d6; --border:#ddd0ba;
-  --text:#2b2419; --muted:#6b5d48; --faint:#968770; --grid:rgba(43,36,25,.09);
-  --shadow:0 1px 2px rgba(60,40,10,.05),0 4px 14px rgba(60,40,10,.06);
-}
-[data-theme="library"]{
-  --bg:#14201b; --surface:#1b2a24; --surface-2:#22342c; --border:#2f453b;
-  --text:#ece4d3; --muted:#b9ad94; --faint:#8b8270; --grid:rgba(236,228,211,.08);
-  --warn:#e9b864; --warn-bg:#3a2e14; --err:#ef9182; --err-bg:#3d221d; --info:#9fc0e6; --info-bg:#1c2d3a; --ok:#9ad6a8; --ok-bg:#183222;
-  --shadow:0 1px 2px rgba(0,0,0,.35),0 6px 20px rgba(0,0,0,.25); color-scheme:dark;
-}
-[data-density="compact"]{ --gap:12px; --pad:14px; --radius:11px; }
+[data-density="compact"]{ --gap:12px; --pad:14px; --radius:8px; }
 
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -280,7 +269,7 @@ table.data td.miss{color:var(--faint)}
 .flag{color:var(--warn);font-weight:700}
 
 /* ---------- Drawer / modal ---------- */
-.overlay{position:fixed;inset:0;background:rgba(10,12,15,.45);z-index:80;display:flex;justify-content:flex-end;animation:fade .15s}
+.overlay{position:fixed;inset:0;background:var(--tk-overlay);z-index:80;display:flex;justify-content:flex-end;animation:fade .15s}
 .overlay.center{justify-content:center;align-items:center;padding:16px}
 @keyframes fade{from{opacity:0}to{opacity:1}}
 .drawer{width:min(520px,100%);height:100%;background:var(--surface);overflow:auto;padding:22px 24px;box-shadow:-10px 0 40px rgba(0,0,0,.2);animation:slide .2s}
@@ -361,13 +350,39 @@ footer.app-footer{max-width:1440px;margin:0 auto;padding:24px;border-top:1px sol
 .chart-values{margin-top:12px;max-height:210px}.chart-values table{font-size:.75rem}.chart-values th{font-size:.7rem}
 @media(max-width:1100px){#grid-favorites>.kpi{grid-column:span 6}}
 @media(max-width:680px){#grid-favorites>.kpi{grid-column:span 12}.card-head{flex-wrap:wrap}.card-tools{max-width:100%}.seg{flex-wrap:wrap}.kpi-list li b{white-space:normal}}
+
+/* =========================================================
+   Stile comune della Toolbox («Strumento»)
+   ========================================================= */
+h1,h2{font-weight:600;letter-spacing:-.025em}
+.brand-mark{border-radius:var(--tk-radius)}
+.brand h1{font-size:1.2rem}
+.brand .sub,.eyebrow,.card-foot,.kpi .k-label,.status-tag,.filter-badge,.lbl{font-family:var(--font-mono)}
+.eyebrow{font-weight:500;letter-spacing:.07em;font-size:.7rem}
+.btn{border-radius:var(--tk-radius);font-weight:600}
+.btn.sm{border-radius:var(--tk-radius-sm)}
+.btn.primary{background:var(--accent);border-color:var(--accent)}
+.header-actions .tk-theme-btn{width:36px;height:36px}
+.section-nav a{border-radius:var(--tk-radius);font:500 .7rem/1.2 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;padding:.6em .85em}
+.section-nav a.active{color:var(--accent);border-color:var(--border)}
+.card{box-shadow:none}
+.kpi .k-value,.pr .v{font-family:var(--font-mono);font-weight:500;letter-spacing:-.05em}
+.kpi .k-value{font-size:1.7rem}
+.chip,.af,.status-tag,.filter-badge{border-radius:var(--tk-radius-sm)}
+.seg{border-radius:var(--tk-radius)}
+.seg button{border-radius:var(--tk-radius-sm)}
+.seg button[aria-pressed="true"]{box-shadow:none;color:var(--accent)}
+.dropzone{border-radius:var(--radius)}
+.modal{border-radius:12px;border:1px solid var(--border)}
+.drawer{border-left:1px solid var(--border)}
+.summary{border-left:0;padding-left:0}
 </style>
 </head>
 <body>
 <a class="sr-only" href="#main">Vai al contenuto</a>
 <header class="app-header">
   <div class="header-inner">
-    <a class="home-link" href="../../index.html" title="Torna alla home di Dashboard Audiolibri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg><span class="home-label">Dashboard Audiolibri</span></a>
+    <a class="home-link" href="../../index.html" title="Torna alla Toolbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span class="home-label">Toolbox</span></a>
     <div class="brand">
       <div class="brand-mark" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14v-2a9 9 0 0 1 18 0v2"/><path d="M21 15a2 2 0 0 1-2 2h-1v-5h1a2 2 0 0 1 2 2z"/><path d="M3 15a2 2 0 0 0 2 2h1v-5H5a2 2 0 0 0-2 2z"/><path d="M9 20h6"/></svg>
@@ -384,6 +399,7 @@ footer.app-footer{max-width:1440px;margin:0 auto;padding:24px;border-top:1px sol
       <button class="btn" id="btn-method" type="button" title="Come vengono calcolati i dati">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><span class="lbl-txt">Metodo</span>
       </button>
+      <button class="tk-theme-btn" type="button" data-tk-theme></button>
       <button class="btn" id="btn-settings" type="button" title="Impostazioni dashboard">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span class="lbl-txt">Impostazioni</span>
       </button>
@@ -1148,8 +1164,9 @@ function fmtDelta(dl, unit = "", isDur = false) {
    --------------------------------------------------------------------- */
 const mqDark = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
 const mqReduce = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
-function resolvedTheme() { return S.prefs.theme === "auto" ? (mqDark && mqDark.matches ? "dark" : "light") : S.prefs.theme; }
-const isDarkTheme = () => ["dark", "library"].includes(resolvedTheme());
+/* Il tema (chiaro/scuro) è quello comune della Toolbox: toolkit-theme.js, chiave "toolbox.theme" */
+function resolvedTheme() { return window.ToolkitTheme ? window.ToolkitTheme.get() : "light"; }
+const isDarkTheme = () => resolvedTheme() === "dark";
 function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 function inkFor(hex) { const c = hex.replace("#", ""); const [r, g, b] = [0, 2, 4].map(i => parseInt(c.substr(i, 2), 16) / 255).map(v => v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4)); const L = .2126 * r + .7152 * g + .0722 * b; return L > .45 ? "#16181b" : "#ffffff"; }
 function alpha(hex, a) { const c = hex.replace("#", ""); return `rgba(${parseInt(c.substr(0, 2), 16)},${parseInt(c.substr(2, 2), 16)},${parseInt(c.substr(4, 2), 16)},${a})`; }
@@ -2104,7 +2121,7 @@ function openSettings() {
   const opt = (v, l, cur) => `<option value="${v}" ${String(cur) === String(v) ? "selected" : ""}>${l}</option>`;
   const dlg = openLayer(`<div class="modal-head"><h2 id="layer-title">Impostazioni dashboard</h2>${closeBtn}</div>
     <div class="settings-grid">
-      <div class="setting"><label class="lbl" for="s-theme">Tema</label><select id="s-theme">${opt("auto", "Automatico (sistema)", p.theme)}${opt("light", "Chiaro", p.theme)}${opt("dark", "Scuro", p.theme)}${opt("paper", "Carta", p.theme)}${opt("library", "Biblioteca", p.theme)}</select></div>
+      <div class="setting"><label class="lbl" for="s-theme">Tema</label><select id="s-theme">${opt("light", "Chiaro", resolvedTheme())}${opt("dark", "Scuro", resolvedTheme())}</select></div>
       <div class="setting"><span class="lbl">Colore principale</span><div class="swatches" role="group" aria-label="Colore principale">${ACCENTS.map(([c, n]) => `<button type="button" class="swatch" style="background:${c}" data-accent="${c}" aria-label="${n}" aria-pressed="${p.accent === c}"></button>`).join("")}<input type="color" id="s-accent" value="${p.accent}" aria-label="Colore personalizzato" style="width:34px;height:30px;border:0;background:none;padding:0"></div></div>
       <div class="setting"><label class="lbl" for="s-density">Densità</label><select id="s-density">${opt("comfortable", "Confortevole", p.density)}${opt("compact", "Compatta", p.density)}</select></div>
       <div class="setting"><label class="lbl" for="s-dur">Formato durata</label><select id="s-dur">${opt("hm", "Ore e minuti (12 h 05 min)", p.durFmt)}${opt("clock", "Ore e minuti (12:05)", p.durFmt)}</select></div>
@@ -2121,7 +2138,7 @@ function openSettings() {
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn sm" type="button" data-wipe="prefs">Preferenze</button><button class="btn sm" type="button" data-wipe="mapping">Mappature colonne</button><button class="btn sm" type="button" data-wipe="filters">Filtri</button><button class="btn sm" type="button" data-wipe="data">CSV memorizzato</button><button class="btn sm danger" type="button" data-wipe="all">Cancella tutto</button></div>`);
   const upd = (k, v) => { S.prefs[k] = v; savePrefs(); };
   const rerender = () => { applyTheme(); destroyAllCharts(); buildFilterUI(); refresh(); };
-  $("#s-theme", dlg).onchange = e => { upd("theme", e.target.value); rerender(); };
+  $("#s-theme", dlg).onchange = e => { if (window.ToolkitTheme) window.ToolkitTheme.set(e.target.value); };
   $$(".swatch", dlg).forEach(b => b.onclick = () => { upd("accent", b.dataset.accent); $$(".swatch", dlg).forEach(x => x.setAttribute("aria-pressed", String(x === b))); $("#s-accent", dlg).value = b.dataset.accent; rerender(); });
   $("#s-accent", dlg).oninput = debounce(e => { upd("accent", e.target.value); $$(".swatch", dlg).forEach(x => x.setAttribute("aria-pressed", "false")); rerender(); }, 120);
   $("#s-density", dlg).onchange = e => { upd("density", e.target.value); applyTheme(); };
@@ -2385,10 +2402,10 @@ function bindEvents() {
     const io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) $$("#section-nav a").forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + en.target.id)); }), { rootMargin: "-40% 0px -55% 0px" });
     $$("#dashboard .section").forEach(s => io.observe(s));
   }
-  if (mqDark) (mqDark.addEventListener ? mqDark.addEventListener("change", onSystemTheme) : mqDark.addListener(onSystemTheme));
+  window.addEventListener("toolkit:theme", onSystemTheme);
   window.addEventListener("resize", debounce(() => { if (S.data) $$("canvas.spark").length && renderKPIs({ F: S.filtered, L: listenedOf(S.filtered) }); }, 300));
 }
-function onSystemTheme() { if (S.prefs.theme === "auto") { applyTheme(); if (S.data) { destroyAllCharts(); refresh(); } } }
+function onSystemTheme() { applyTheme(); const t = $("#s-theme"); if (t) t.value = resolvedTheme(); if (S.data) { destroyAllCharts(); refresh(); } }
 
 /* ---------------------------------------------------------------------
    AVVIO
