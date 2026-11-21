@@ -15,7 +15,7 @@
  * "tabshelf-app-"; all'attivazione vengono cancellate solo quelle vecchie con questo
  * prefisso (mai le cache delle altre app, né la cache delle miniature "tabshelf-thumbs-…").
  */
-const CACHE_VERSION = 'tabshelf-app-v6';
+const CACHE_VERSION = 'tabshelf-app-v7';
 const APP_CACHE_PREFIX = 'tabshelf-app-';
 
 const CORE = [
@@ -52,6 +52,8 @@ const CORE = [
   './js/views/tags.js',
   './js/views/trash.js',
   '../../assets/css/app-nav.css',
+  '../../assets/css/toolkit.css',
+  '../../assets/js/toolkit-theme.js',
 ];
 
 /** Librerie esterne ammesse in cache (devono avere la versione nell'indirizzo). */
@@ -63,7 +65,9 @@ const CDN_PREFIXES = [
 ];
 
 const SCOPE_PATH = new URL('./', self.location).pathname;
-const SHARED_CSS = new URL('../../assets/css/app-nav.css', self.location).href;
+/** File comuni della Toolbox usati da TabShelf (stile e tema). */
+const SHARED = ['../../assets/css/app-nav.css', '../../assets/css/toolkit.css', '../../assets/js/toolkit-theme.js']
+  .map((u) => new URL(u, self.location).href);
 
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
@@ -98,7 +102,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   const isApp = url.origin === self.location.origin
-    && (url.pathname.startsWith(SCOPE_PATH) || url.href === SHARED_CSS);
+    && (url.pathname.startsWith(SCOPE_PATH) || SHARED.includes(url.href));
   if (!isApp) return; // Supabase e tutto il resto: nessun intervento
 
   event.respondWith(networkFirst(req));

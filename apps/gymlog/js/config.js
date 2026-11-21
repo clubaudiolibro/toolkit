@@ -3,7 +3,7 @@
  * APP_VERSION va tenuta uguale al campo version di "gymlog" in assets/js/apps.js.
  * SCHEMA_VERSION deve corrispondere a gym_schema_version() in supabase/gymlog.sql.
  */
-export const APP_VERSION = '1.6';
+export const APP_VERSION = '1.7';
 export const SCHEMA_VERSION = 4;
 
 /** Voci iniziali, inserite al primo avvio (poi si modificano da Altro → Liste). */

@@ -11,7 +11,7 @@
  * dell'app, aggiornando anche l'elenco CORE. All'attivazione vengono cancellate solo le vecchie
  * cache con prefisso "filmshelf-app-" (mai quelle delle altre app).
  */
-const CACHE_VERSION = 'filmshelf-app-v4';
+const CACHE_VERSION = 'filmshelf-app-v5';
 const APP_CACHE_PREFIX = 'filmshelf-app-';
 
 const CORE = [
@@ -45,6 +45,8 @@ const CORE = [
   './manifest.json',
   './styles.css',
   '../../assets/css/app-nav.css',
+  '../../assets/css/toolkit.css',
+  '../../assets/js/toolkit-theme.js',
   '../../assets/js/toolbox-config.js',
   '../../assets/js/toolbox-auth.js',
   '../../assets/js/toolbox-guard.js',
