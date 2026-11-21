@@ -183,7 +183,7 @@ export function buildCsv() {
   for (const m of meas) lines.push(csvLine([fmtDate(m.day), ...MEASURES.map(x => num(m[x.key]))]));
 
   lines.push('', 'ESERCIZI');
-  lines.push(csvLine(['Nome', 'Gruppi muscolari', 'Attrezzo', 'Efficacia', 'Descrizione', 'Video', 'Note', 'Nel cestino']));
+  lines.push(csvLine(['Nome', 'Gruppi muscolari', 'Attrezzo', 'Efficacia', 'Come si esegue', 'Video', 'Errori da evitare', 'Nel cestino']));
   const exs = state.exercises.slice().sort((a, b) => a.name.localeCompare(b.name, 'it', { sensitivity: 'base' }));
   for (const e of exs) {
     const set = state.exMuscles.get(e.id) || new Set();
