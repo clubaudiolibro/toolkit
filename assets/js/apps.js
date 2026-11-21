@@ -91,7 +91,7 @@ const APPS = [
           version, text (descrizione brevissima).
    ===================================================================== */
 const CHANGELOG = [
-  { date: "2026-11-21", app: "filmshelf", version: "1.0", text: "Prima versione: ricerca dei film su TMDB e aggiunta tra i visti (data, voto, luoghi, note) o in watchlist; griglia, lista e schede con ricerca e ordinamento; scheda del film con modifica ed eliminazione. Richiede supabase/filmshelf.sql e una chiave TMDB." },
+  { date: "2026-11-21", app: "filmshelf", version: "1.0", text: "Prima versione: ricerca dei film su TMDB e aggiunta tra i visti (data, voto, luoghi, note) o in watchlist; griglia, lista e schede con ricerca e ordinamento; scheda del film con modifica ed eliminazione; statistiche. Richiede supabase/filmshelf.sql e una chiave TMDB." },
   { date: "2026-11-21", app: "tabshelf", version: "1.1", text: "Tasto «Azzera filtri» sempre a portata; link facoltativo (URL + nome) per ogni immagine; in Visualizza il tasto «i» apre note (modificabili) e link. Richiede di rilanciare apps/tabshelf/supabase/setup.sql (schema 3)." },
   { date: "2026-11-21", app: "toolbox", version: "1.5", text: "Rimossa la sezione «In evidenza» dalla home." },
   { date: "2026-11-21", app: "toolbox", version: "1.4", text: "Registro delle versioni: di default mostra solo le ultime 3 voci, con il pulsante «Mostra tutto» per vedere lo storico." },

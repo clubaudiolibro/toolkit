@@ -266,6 +266,10 @@ Solo tema chiaro, accento `#8a3fb8` (colore della categoria Film). Stessa strutt
   inverte il verso; i valori mancanti vanno sempre in fondo (scelta ricordata in `filmshelf.sort.<stato>`).
 - **Scheda del film** (`#/film/<id>`, `js/views/film.js`): tutti i dati, «Modifica» (data, voto, luoghi, note),
   «Elimina» con conferma, «Sposta in watchlist»; per la watchlist «Segna come visto».
+- **Statistiche** (`js/views/stats.js`, grafici in HTML/CSS senza librerie, un solo colore con i valori scritti):
+  numeri principali (film visti, ore, voto medio), film per anno e per mese (scelta dell'anno; i film senza data non
+  contano), generi più visti, distribuzione dei voti (19 gradini), ore per luogo (un film in più luoghi conta per
+  ciascuno, più «Non indicato»), watchlist (numero, durata media e totale).
 - **Senza rete:** una copia dei film è salvata nel browser (`localStorage`, chiave `filmshelf.cache`) e viene mostrata
   in sola lettura.
 - **Crediti:** Altro → «Crediti e informazioni», con logo TMDB e la dicitura richiesta.

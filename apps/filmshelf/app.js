@@ -10,11 +10,13 @@ import * as films from './js/views/films.js';
 import * as film from './js/views/film.js';
 import * as add from './js/views/add.js';
 import * as altro from './js/views/altro.js';
+import * as stats from './js/views/stats.js';
 
 const TABS = [
   { id: 'visti', label: 'Visti', icon: 'film' },
   { id: 'watchlist', label: 'Watchlist', icon: 'bookmark' },
   { id: 'aggiungi', label: 'Aggiungi', icon: 'plus' },
+  { id: 'statistiche', label: 'Statistiche', icon: 'stats' },
   { id: 'altro', label: 'Altro', icon: 'more' },
 ];
 
@@ -24,6 +26,7 @@ const ROUTES = [
   [/^watchlist$/, films, 'watchlist'],
   [/^film\/([0-9a-f-]{36})$/, film, null],
   [/^aggiungi$/, add, 'aggiungi'],
+  [/^statistiche$/, stats, 'statistiche'],
   [/^altro$/, altro, 'altro'],
 ];
 
