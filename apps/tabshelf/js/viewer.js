@@ -7,14 +7,15 @@
  *  - PDF resi con PDF.js, pagine in verticale, stessi gesti;
  *  - schermo sempre acceso (Screen Wake Lock) finché il documento è aperto;
  *  - barra inferiore: titolo e artista, stato (tocco per cambiare), voto a 5 stelle, chiudi.
+ *    Un tasto «i» apre un pannello con le note (modificabili) e il link del documento.
  *    Le modifiche si salvano subito.
  */
 import { STATUSES } from './config.js';
 import { state } from './store.js';
 import { updateDocument } from './actions.js';
 import { signedUrl, refreshSignedUrl, fileArrayBuffer } from './storage.js';
-import { esc, h } from './util.js';
-import { toastError } from './ui.js';
+import { esc, h, safeUrl, linkText } from './util.js';
+import { toast, toastError } from './ui.js';
 import { openPdf, closePdf } from './pdf.js';
 import { docTitle } from './filter.js';
 
@@ -249,11 +250,25 @@ class Viewer {
       <button type="button" class="v-nav v-prev" aria-label="Documento precedente">‹</button>
       <button type="button" class="v-nav v-next" aria-label="Documento successivo">›</button>
       <div class="v-bar">
+        <div class="v-panel" hidden>
+          <label class="v-pfield"><span>Note</span><textarea class="v-notes" rows="3" placeholder="Nessuna nota: tocca qui per scriverne una"></textarea></label>
+          <div class="v-linkview">
+            <a class="v-link" target="_blank" rel="noopener noreferrer" hidden></a>
+            <button type="button" class="v-linkedit"></button>
+          </div>
+          <div class="v-linkform" hidden>
+            <input type="text" class="v-lurl" inputmode="url" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="URL (https://…)" aria-label="URL del link">
+            <input type="text" class="v-llabel" placeholder="Nome link (es. YouTube)" aria-label="Nome del link">
+            <button type="button" class="v-lsave">Salva</button>
+            <button type="button" class="v-lcancel">Annulla</button>
+          </div>
+        </div>
         <div class="v-info"><strong class="v-title"></strong><span class="v-artist"></span></div>
         <button type="button" class="v-status" aria-label="Cambia stato"></button>
         <div class="v-stars" role="radiogroup" aria-label="Voto">
           ${[1, 2, 3, 4, 5].map((n) => `<button type="button" data-star="${n}" aria-label="${n} stell${n === 1 ? 'a' : 'e'}">★</button>`).join('')}
         </div>
+        <button type="button" class="v-more" aria-expanded="false" aria-label="Note e link" title="Note e link">i</button>
         <button type="button" class="v-close" aria-label="Chiudi">✕ <span>Chiudi</span></button>
       </div>
     </div>`);
@@ -265,6 +280,7 @@ class Viewer {
     this.el.querySelector('.v-prev').onclick = () => this.go(-1);
     this.el.querySelector('.v-next').onclick = () => this.go(1);
     this.el.querySelector('.v-status').onclick = () => this.cycleStatus();
+    this.bindPanel();
     this.el.querySelector('.v-stars').addEventListener('click', (e) => {
       const b = e.target.closest('[data-star]'); if (b) this.setStars(+b.dataset.star);
     });
@@ -316,6 +332,7 @@ class Viewer {
   }
 
   go(dir) {
+    this.commitPanel();
     const target = this.index + dir;
     if (target < 0 || target >= this.docs.length) { this.position(0, true); return; }
     const w = this.track.clientWidth;
@@ -361,6 +378,7 @@ class Viewer {
       b.classList.toggle('on', n <= (d.mastery || 0));
       b.setAttribute('aria-checked', String(n === d.mastery));
     });
+    this.renderPanel(d);
     this.el.querySelector('.v-prev').hidden = this.index === 0;
     this.el.querySelector('.v-next').hidden = this.index >= this.docs.length - 1;
   }
@@ -371,7 +389,7 @@ class Viewer {
     const before = { ...d };
     Object.assign(d, patch); this.updateBar();
     try { await updateDocument(id, patch); } catch (e) {
-      Object.assign(d, { status: before.status, mastery: before.mastery }); this.updateBar();
+      Object.keys(patch).forEach((k) => { d[k] = before[k]; }); this.updateBar();
       toastError(e, 'Modifica non salvata');
     }
   }
@@ -385,6 +403,75 @@ class Viewer {
   setStars(n) {
     const d = state.documents.find((x) => x.id === this.doc.id);
     this.save({ mastery: d.mastery === n ? null : n }); // toccare di nuovo la stessa stella toglie il voto
+  }
+
+  /* ---------------------------------------------------------------- note e link */
+
+  bindPanel() {
+    const q = (s) => this.el.querySelector(s);
+    this.editingLink = false;
+    q('.v-more').onclick = () => {
+      const open = q('.v-panel').hidden;
+      if (!open) this.commitPanel();
+      this.setPanelOpen(open);
+    };
+    q('.v-notes').addEventListener('blur', () => this.commitPanel());
+    q('.v-linkedit').onclick = () => {
+      const d = state.documents.find((x) => x.id === this.doc.id) || this.doc;
+      q('.v-lurl').value = d.link_url || '';
+      q('.v-llabel').value = d.link_label || '';
+      this.setLinkEditing(true);
+      q('.v-lurl').focus();
+    };
+    q('.v-lcancel').onclick = () => this.setLinkEditing(false);
+    q('.v-lsave').onclick = () => this.saveLink();
+    q('.v-linkform').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); this.saveLink(); } });
+  }
+
+  setPanelOpen(open) {
+    this.el.querySelector('.v-panel').hidden = !open;
+    const b = this.el.querySelector('.v-more');
+    b.setAttribute('aria-expanded', String(open)); b.classList.toggle('open', open);
+  }
+
+  setLinkEditing(on) {
+    this.editingLink = on;
+    this.el.querySelector('.v-linkform').hidden = !on;
+    this.el.querySelector('.v-linkview').hidden = on;
+  }
+
+  /** Aggiorna il contenuto del pannello (senza disturbare chi sta scrivendo). */
+  renderPanel(d) {
+    const q = (s) => this.el.querySelector(s);
+    const ta = q('.v-notes');
+    if (document.activeElement !== ta) ta.value = d.notes || '';
+    const url = safeUrl(d.link_url);
+    const a = q('.v-link');
+    a.hidden = !url;
+    if (url) { a.href = url; a.textContent = `🔗 ${linkText(url, d.link_label)}`; } else { a.removeAttribute('href'); a.textContent = ''; }
+    q('.v-linkedit').textContent = url ? '✎ Modifica link' : '+ Aggiungi link';
+    q('.v-more').classList.toggle('has-content', Boolean((d.notes && d.notes.trim()) || url));
+    if (!this.editingLink) this.setLinkEditing(false);
+  }
+
+  /** Salva le note se sono cambiate. */
+  commitPanel() {
+    if (this.closed) return;
+    const ta = this.el.querySelector('.v-notes');
+    const d = state.documents.find((x) => x.id === this.doc.id);
+    if (!d) return;
+    const val = ta.value.trim() || null;
+    if ((d.notes || null) !== val) this.save({ notes: val });
+  }
+
+  async saveLink() {
+    const q = (s) => this.el.querySelector(s);
+    const raw = q('.v-lurl').value.trim();
+    const url = safeUrl(raw);
+    if (raw && !url) { toast('L\'indirizzo non è valido: deve iniziare con http:// o https://', { type: 'error' }); return; }
+    const label = q('.v-llabel').value.trim() || null;
+    this.setLinkEditing(false);
+    await this.save({ link_url: url, link_label: url ? label : null });
   }
 
   toggleUi() { this.el.classList.toggle('ui-hidden'); }
@@ -506,6 +593,8 @@ class Viewer {
   }
 
   key(e) {
+    // mentre si scrive nel pannello, i tasti non devono muovere o chiudere il documento
+    if (e.target?.closest?.('input, textarea')) { if (e.key === 'Escape') e.target.blur(); return; }
     const zz = this.slides.cur?.zoomer;
     if (e.key === 'Escape') { e.preventDefault(); this.close(); }
     else if (e.key === 'ArrowRight' || e.key === 'PageDown') { if (!zz?.canPanY() || e.key === 'ArrowRight') this.go(1); }
@@ -533,6 +622,7 @@ class Viewer {
 
   close(fromHistory = false) {
     if (this.closed) return;
+    this.commitPanel();
     this.closed = true;
     clearTimeout(this.goTimer);
     Object.values(this.slides).forEach((s) => s?.destroy());

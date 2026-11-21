@@ -8,7 +8,7 @@
 import { SPACE, IMAGES } from '../config.js';
 import { insertDocument } from '../actions.js';
 import { makePaths, uploadFile, removeFiles, primeThumb } from '../storage.js';
-import { esc, h, uuid, formatBytes, errorMessage } from '../util.js';
+import { esc, h, uuid, formatBytes, errorMessage, safeUrl } from '../util.js';
 import { openDialog, toast, toastError, promptDialog } from '../ui.js';
 import { createTagPicker } from '../tagpicker.js';
 import { prepareImage, pdfThumb, previewCanvas, editImage, rotateCanvas, blobToCanvas, resizeCanvas, extFor } from '../images.js';
@@ -43,7 +43,7 @@ export function addFiles(fileList) {
     if (!kind) { rejected.push(file.name); return; }
     const item = {
       id: uuid(), file, kind,
-      title: titleFromName(file.name), artist: '', notes: '', tags: [],
+      title: titleFromName(file.name), artist: '', notes: '', linkUrl: '', linkLabel: '', tags: [],
       edited: null, preview: null,
       status: 'ready', step: '', progress: 0, error: '',
       selected: false, el: null, picker: null,
@@ -110,6 +110,9 @@ async function processItem(item) {
   const setStep = (step, progress) => { item.step = step; item.progress = progress; updateCard(item); };
   item.status = 'working'; item.error = '';
   try {
+    // il link è facoltativo, ma se c'è deve essere un indirizzo valido (controllo prima di inviare i file)
+    const linkUrl = safeUrl(item.linkUrl);
+    if (String(item.linkUrl || '').trim() && !linkUrl) throw new Error('L\'indirizzo del link non è valido (deve iniziare con http:// o https://).');
     setStep('Preparazione…', 0.1);
     let file; let thumb;
     if (item.kind === 'image') {
@@ -134,6 +137,7 @@ async function processItem(item) {
     await insertDocument({
       id: item.id,
       title: clean(item.title), artist: clean(item.artist), notes: clean(item.notes),
+      link_url: linkUrl, link_label: linkUrl ? clean(item.linkLabel) : null,
       original_name: item.file.name,
       file_path: paths.file, thumb_path: paths.thumb,
       file_type: item.kind, file_size: file.size, thumb_size: thumb.size,
@@ -170,6 +174,12 @@ function mountCard(item) {
       </div>
       <div class="field"><span>Tag</span><div class="slot-tags"></div></div>
       <details class="up-notes"><summary>Note</summary><textarea data-f="notes" rows="2"></textarea></details>
+      <details class="up-notes up-link"><summary>Link</summary>
+        <div class="up-grid">
+          <label class="field"><span>URL</span><input type="text" inputmode="url" autocapitalize="off" autocomplete="off" spellcheck="false" data-f="linkUrl" placeholder="https://… (facoltativo)"></label>
+          <label class="field"><span>Nome link</span><input type="text" data-f="linkLabel" placeholder="es. YouTube"></label>
+        </div>
+      </details>
     </div>
     <div class="up-side">
       <div class="up-tools">

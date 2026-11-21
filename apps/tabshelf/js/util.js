@@ -107,3 +107,24 @@ export function loadScript(src) {
   }
   return loadedScripts.get(src);
 }
+
+/**
+ * Rende sicuro l'indirizzo di un link: accetta solo http/https. Se manca il protocollo
+ * (es. "youtube.com/...") aggiunge https://. Restituisce null se vuoto o non valido.
+ */
+export function safeUrl(value) {
+  const raw = String(value ?? '').trim();
+  if (!raw) return null;
+  const withProto = /^[a-z][a-z0-9+.-]*:/i.test(raw) ? raw : `https://${raw}`;
+  try {
+    const u = new URL(withProto);
+    return u.protocol === 'http:' || u.protocol === 'https:' ? u.href : null;
+  } catch { return null; }
+}
+
+/** Testo da mostrare per il link: il nome scelto, altrimenti il sito (es. "youtube.com"). */
+export function linkText(url, label) {
+  const l = String(label ?? '').trim();
+  if (l) return l;
+  try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; }
+}
