@@ -45,26 +45,21 @@ Tutti i percorsi sono relativi: il sito funziona sia nella root del dominio sia 
 - TabShelf ha la sua versione anche in `apps/tabshelf/js/config.js` (`APP_VERSION`, visibile nelle Impostazioni
   e nei backup): va tenuta uguale a quella di `apps.js`.
 
-## Stile e tema (regole comuni)
-Tutti gli strumenti condividono la stessa veste grafica, stile «Strumento»:
-- **Font:** Inter Tight per titoli e testi, JetBrains Mono per etichette, numeri, tempi e metadati (in maiuscolo, spaziati).
-- **Superfici:** fondo `#F7F7F5`, pannelli bianchi, filetti da 1 px `#E2E2DE`, niente ombre pesanti; angoli da 8 px (10 px per pannelli e card).
-- **Colore:** ogni strumento usa il colore della sua categoria come segnale (indicatori, valori, voce attiva, pulsante principale), mai come sfondo pieno delle pagine.
-  | Categoria | Pieno (chiaro) | Testo piccolo (chiaro) | Tema scuro |
-  |---|---|---|---|
-  | Audiolibri | `#2F6F62` | `#2F6F62` | `#6D9A91` |
-  | Chitarra | `#C2632B` | `#A3501F` | `#D4926B` |
-  | Benessere | `#B0506E` | `#A24563` | `#C88499` |
-  | Film | `#8A3FB8` | `#8A3FB8` | `#AD79CD` |
-  | Utility | `#3B6FD1` | `#3462BD` | `#769ADF` |
+## Identità visiva (regole comuni a tutti gli strumenti)
+Tutta la Toolbox usa lo stile **«Ciottolo»**: superfici morbide senza bordi, angoli ampi, colore della categoria come velatura e un solo font (Atkinson Hyperlegible Next). Da un'app all'altra cambia solo il colore della categoria.
+
+**Le regole complete sono in [`docs/IDENTITA-VISIVA.md`](docs/IDENTITA-VISIVA.md)** (colori con i contrasti verificati, caratteri, misure, struttura delle schermate, componenti pronti `.tk-*` e checklist): vanno seguite per ogni nuovo strumento.
+
+In breve:
 - **Tema:** chiaro di base; lo scuro si attiva con il pulsante luna/sole presente in home e in ogni strumento. La scelta vale per tutta la Toolbox in quel browser (chiave `toolbox.theme`).
-- **File comuni:** `assets/css/toolkit.css` (variabili `--tk-*`, colori per categoria, pulsante tema) e `assets/js/toolkit-theme.js` (applica il tema subito, gestisce ogni `<button data-tk-theme>`, avvisa le app con l'evento `toolkit:theme`). I colori di categoria in `assets/js/apps.js` (`color`, `text`, `dark`) devono coincidere con quelli di `toolkit.css`.
+- **File comuni:** `assets/css/toolkit.css` (variabili `--tk-*`, colori per categoria, componenti `.tk-*`), `assets/css/app-nav.css` (link «Toolbox») e `assets/js/toolkit-theme.js` (applica il tema subito, gestisce ogni `<button data-tk-theme>`, avvisa le app con l'evento `toolkit:theme`).
+- **Colori delle categorie:** quelli di `assets/js/apps.js` (`color`, `text`, `dark`) devono coincidere con quelli di `toolkit.css` e della guida.
 
 ## Aggiungere un nuovo strumento
 1. Crea `apps/<id>/index.html`.
 2. Aggiungi una voce in `assets/js/apps.js` (id, title, description, url, icon, tags, version `"1.0"`) e una riga in `CHANGELOG`.
 3. Per richiedere l'accesso dalla home, nell'`<head>` aggiungi `<script src="../../assets/js/toolbox-guard.js"></script>`. Se lo strumento ha dati online: crea la tabella in `supabase/<nome>.sql` con RLS attiva, nessun permesso ad `anon` e una policy per `authenticated`; nel frontend usa `await Toolbox.getClient()` (`assets/js/toolbox-auth.js`).
-4. Stile comune: metti la categoria su `<html lang="it" data-cat="<categoria>">`; nell'`<head>` includi, con percorsi `../../`, `assets/js/toolkit-theme.js` (senza `defer`, prima dei CSS), `assets/css/toolkit.css`, `assets/css/app-nav.css`, poi il CSS dello strumento costruito sulle variabili `--tk-*`. Nell'header il link `.home-link` verso `../../index.html` e un `<button class="tk-theme-btn" data-tk-theme></button>` per il tema. Includi anche manifest e icone.
+4. Stile comune: segui la checklist di [`docs/IDENTITA-VISIVA.md`](docs/IDENTITA-VISIVA.md) (categoria su `<html data-cat>`, file comuni nell'`<head>`, `.home-link` e pulsante tema nell'header, solo variabili `--tk-*` e componenti `.tk-*`, prova in chiaro e in scuro). Includi anche manifest e icone.
 
 ## TabShelf
 

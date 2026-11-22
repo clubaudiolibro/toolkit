@@ -102,8 +102,7 @@
     items.forEach(app => grid.appendChild(card(app)));
     const c = document.getElementById("app-count");
     if (c) {
-      c.textContent = "[" + String(items.length).padStart(2, "0") + "]";
-      c.title = items.length === 1 ? "1 strumento" : items.length + " strumenti";
+      c.textContent = items.length === 1 ? "1 strumento" : items.length + " strumenti";
     }
   }
 

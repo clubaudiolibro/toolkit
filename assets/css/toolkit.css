@@ -1,98 +1,176 @@
 /* =====================================================================
-   TOOLBOX — regole estetiche comuni a tutti gli applicativi
-   Stile «Strumento»: chiaro di base, scuro come opzione (pulsante Tema).
-   Titoli e testi: Inter Tight · etichette, numeri, tempi: JetBrains Mono.
-   Filetti sottili, angoli da 8 px, colore della categoria come segnale
-   (indicatori, valori, azione principale).
+   TOOLBOX — identità visiva comune a tutti gli applicativi
+   Stile «Ciottolo»: superfici morbide, tanto respiro, colore come velatura.
+   Guida completa (regole, componenti, come si usa): docs/IDENTITA-VISIVA.md
 
    Come si usa in un applicativo:
-     <html lang="it" data-cat="benessere">          ← categoria (vedi apps.js)
+     <html lang="it" data-cat="benessere">          ← categoria (vedi assets/js/apps.js)
      <script src="../../assets/js/toolkit-theme.js"></script>   (nel <head>, prima del CSS)
      <link rel="stylesheet" href="../../assets/css/toolkit.css">
-   Poi nel CSS dell'app si usano le variabili --tk-*.
+     <link rel="stylesheet" href="../../assets/css/app-nav.css">
+   Poi nel CSS dell'app si usano SOLO le variabili --tk-* (niente colori scritti a mano)
+   e, quando servono, i componenti pronti .tk-* definiti qui sotto.
    Pulsante tema: qualsiasi <button data-tk-theme></button> (lo gestisce toolkit-theme.js).
    ===================================================================== */
-@import url("https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@200..800&display=swap");
 
 :root{
-  --tk-font:"Inter Tight","Inter","Segoe UI Variable","Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
-  --tk-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
-  --tk-radius-sm:6px; --tk-radius:8px; --tk-radius-lg:10px;
+  /* Carattere: un solo font, pensato per la leggibilità. --tk-mono resta per compatibilità
+     ma punta allo stesso font: per i numeri incolonnati usare font-variant-numeric:tabular-nums. */
+  --tk-font:"Atkinson Hyperlegible Next","Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --tk-mono:var(--tk-font);
+
+  /* Angoli: tondo pieno per chip, badge e barre; 24 per le card; 16 per pulsanti e blocchi; 14 per i campi */
+  --tk-radius-sm:10px; --tk-radius-field:14px; --tk-radius:16px; --tk-radius-lg:24px; --tk-radius-pill:999px;
+  /* Spaziature (passo di 8) e misure */
+  --tk-s1:4px; --tk-s2:8px; --tk-s3:12px; --tk-s4:16px; --tk-s5:24px; --tk-s6:32px; --tk-s7:48px;
+  --tk-touch:44px;
 
   /* Neutri — tema chiaro */
-  --tk-bg:#f7f7f5; --tk-surface:#ffffff; --tk-surface-2:#f1f1ee;
-  --tk-line:#e2e2de; --tk-line-strong:#c4c6c2;
-  --tk-text:#16181b; --tk-muted:#575d66; --tk-faint:#666c75;
+  --tk-bg:#eef1f4; --tk-surface:#ffffff; --tk-surface-2:#f5f7f9;
+  --tk-line:#dce1e7;            /* filetti e separatori (decorativi) */
+  --tk-line-strong:#7d8794;     /* bordo dei campi e dei controlli: 3,6:1 */
+  --tk-text:#1c2430; --tk-muted:#566170; --tk-faint:#5e6977;
   --tk-on-accent:#ffffff;
-  --tk-ok:#2f7d4f; --tk-ok-soft:#e3f2e8;
-  --tk-warn:#8a5f00; --tk-warn-soft:#fff4d6;
+  --tk-ok:#2b7448; --tk-ok-soft:#e1f1e7;
+  --tk-warn:#835a00; --tk-warn-soft:#fdf1d4;
   --tk-danger:#b3261e; --tk-danger-soft:#fbe5e3;
-  --tk-shadow:0 1px 2px rgba(0,0,0,.04),0 6px 18px rgba(0,0,0,.06);
-  --tk-shadow-lg:0 10px 40px rgba(0,0,0,.14);
-  --tk-overlay:rgba(20,20,24,.38);
+  /* Ombre: le card NON hanno ombra; solo ciò che galleggia (barra in basso, timer, menu, finestre) */
+  --tk-shadow:none;
+  --tk-shadow-float:0 2px 6px rgba(28,36,48,.08),0 14px 36px rgba(28,36,48,.16);
+  --tk-shadow-lg:0 2px 6px rgba(28,36,48,.08),0 20px 48px rgba(28,36,48,.22);
+  --tk-overlay:rgba(21,25,30,.42);
 
-  /* Accento: senza categoria è neutro */
-  --tk-accent:#16181b; --tk-accent-text:#16181b;
-  --tk-accent-soft:color-mix(in srgb,var(--tk-accent) 10%,var(--tk-surface));
-  --tk-accent-softer:color-mix(in srgb,var(--tk-accent) 5%,var(--tk-surface));
-  --tk-accent-strong:color-mix(in srgb,var(--tk-accent) 80%,#000);
-  --tk-accent-fill:var(--tk-accent);   /* fondo dei pulsanti pieni (con testo --tk-on-accent) */
+  /* Colore della categoria. Senza categoria (home) è l'inchiostro neutro.
+     --tk-cat         tono di riferimento (grafici, barre, dischi pieni)
+     --tk-accent      colore pieno per elementi grandi e grafici
+     --tk-accent-fill fondo dei pulsanti pieni (testo --tk-on-accent)
+     --tk-accent-text testo piccolo, link, voce attiva (≥ 4,5:1 su fondo, superficie e velatura)
+     --tk-accent-soft velatura: fondo di filtri scelti, badge, voce attiva, dischi delle icone */
+  --tk-cat:#1c2430;
+  --tk-accent:var(--tk-cat); --tk-accent-text:#1c2430; --tk-accent-fill:#1c2430;
+  --tk-accent-soft:color-mix(in srgb,var(--tk-cat) 12%,var(--tk-surface));
+  --tk-accent-softer:color-mix(in srgb,var(--tk-cat) 6%,var(--tk-surface));
+  --tk-accent-strong:color-mix(in srgb,var(--tk-accent-fill) 82%,#000);
   color-scheme:light;
 }
 
 /* Neutri — tema scuro (solo se scelto dal pulsante) */
 :root[data-theme="dark"]{
-  --tk-bg:#0f1012; --tk-surface:#17191c; --tk-surface-2:#1e2125;
-  --tk-line:#2a2e33; --tk-line-strong:#4a4f57;
-  --tk-text:#eceef1; --tk-muted:#a3a9b3; --tk-faint:#8a919b;
-  --tk-on-accent:#0f1012;
-  --tk-ok:#6fbf8e; --tk-ok-soft:#1b2a21;
-  --tk-warn:#e0b252; --tk-warn-soft:#2c2513;
-  --tk-danger:#f08a80; --tk-danger-soft:#33191a;
-  --tk-shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.3);
-  --tk-shadow-lg:0 10px 40px rgba(0,0,0,.55);
+  --tk-bg:#15191e; --tk-surface:#1e242b; --tk-surface-2:#262d35;
+  --tk-line:#323a44; --tk-line-strong:#7a838f;
+  --tk-text:#edf0f3; --tk-muted:#a3acb7; --tk-faint:#99a2ae;
+  --tk-on-accent:#15191e;
+  --tk-ok:#74c795; --tk-ok-soft:#1a2c22;
+  --tk-warn:#e6b85a; --tk-warn-soft:#2e2715;
+  --tk-danger:#f39389; --tk-danger-soft:#36201f;
+  --tk-shadow-float:0 2px 6px rgba(0,0,0,.4),0 14px 36px rgba(0,0,0,.55);
+  --tk-shadow-lg:0 2px 6px rgba(0,0,0,.45),0 20px 48px rgba(0,0,0,.6);
   --tk-overlay:rgba(0,0,0,.6);
-  --tk-accent:#eceef1; --tk-accent-text:#eceef1;
-  --tk-accent-soft:color-mix(in srgb,var(--tk-accent) 14%,var(--tk-surface));
-  --tk-accent-softer:color-mix(in srgb,var(--tk-accent) 7%,var(--tk-surface));
-  --tk-accent-strong:color-mix(in srgb,var(--tk-accent) 80%,#fff);
+  --tk-cat:#edf0f3;
+  --tk-accent:#edf0f3; --tk-accent-text:#edf0f3; --tk-accent-fill:#edf0f3;
+  --tk-accent-soft:#2c343e;
+  --tk-accent-softer:#242b33;
+  --tk-accent-strong:color-mix(in srgb,var(--tk-accent-fill) 82%,#fff);
   color-scheme:dark;
 }
 
-/* Colore per categoria — chiaro: tono pieno + tono per testi piccoli */
-:root[data-cat="audiolibri"]{--tk-accent:#2f6f62;--tk-accent-text:#2f6f62}
-:root[data-cat="chitarra"]  {--tk-accent:#c2632b;--tk-accent-text:#a3501f}
-:root[data-cat="benessere"] {--tk-accent:#b0506e;--tk-accent-text:#a24563}
-:root[data-cat="film"]      {--tk-accent:#8a3fb8;--tk-accent-text:#8a3fb8}
-:root[data-cat="utility"]   {--tk-accent:#3b6fd1;--tk-accent-text:#3462bd}
-/* Arancio: per il testo sul pulsante pieno serve il tono scuro */
-:root[data-cat="chitarra"]:not([data-theme="dark"]){--tk-accent-fill:#a3501f}
-/* Scuro: toni schiariti */
-:root[data-theme="dark"][data-cat="audiolibri"]{--tk-accent:#6d9a91;--tk-accent-text:#6d9a91}
-:root[data-theme="dark"][data-cat="chitarra"]  {--tk-accent:#d4926b;--tk-accent-text:#d4926b}
-:root[data-theme="dark"][data-cat="benessere"] {--tk-accent:#c88499;--tk-accent-text:#c88499}
-:root[data-theme="dark"][data-cat="film"]      {--tk-accent:#ad79cd;--tk-accent-text:#ad79cd}
-:root[data-theme="dark"][data-cat="utility"]   {--tk-accent:#769adf;--tk-accent-text:#769adf}
+/* Colore per categoria — tema chiaro (valori verificati WCAG AA, vedi docs/IDENTITA-VISIVA.md) */
+:root[data-cat="audiolibri"]{--tk-cat:#2f6f62;--tk-accent:#2f6f62;--tk-accent-fill:#2f6f62;--tk-accent-text:#2f6f62}
+:root[data-cat="chitarra"]  {--tk-cat:#c2632b;--tk-accent:#c2632b;--tk-accent-fill:#b35620;--tk-accent-text:#ac4f10}
+:root[data-cat="benessere"] {--tk-cat:#b0506e;--tk-accent:#b0506e;--tk-accent-fill:#b0506e;--tk-accent-text:#a94a68}
+:root[data-cat="film"]      {--tk-cat:#8a3fb8;--tk-accent:#8a3fb8;--tk-accent-fill:#8a3fb8;--tk-accent-text:#8a3fb8}
+:root[data-cat="utility"]   {--tk-cat:#3b6fd1;--tk-accent:#3b6fd1;--tk-accent-fill:#3b6fd1;--tk-accent-text:#3266c7}
+/* Tema scuro: tono chiaro per testo, pulsanti (con testo scuro) e grafici; velatura al 22% del tono di riferimento */
+:root[data-theme="dark"][data-cat]{--tk-accent-soft:color-mix(in srgb,var(--tk-cat) 22%,var(--tk-surface));--tk-accent-softer:color-mix(in srgb,var(--tk-cat) 12%,var(--tk-surface))}
+:root[data-theme="dark"][data-cat="audiolibri"]{--tk-cat:#2f6f62;--tk-accent:#66a697;--tk-accent-fill:#66a697;--tk-accent-text:#66a697}
+:root[data-theme="dark"][data-cat="chitarra"]  {--tk-cat:#c2632b;--tk-accent:#e98751;--tk-accent-fill:#e98751;--tk-accent-text:#e98751}
+:root[data-theme="dark"][data-cat="benessere"] {--tk-cat:#b0506e;--tk-accent:#e37e9b;--tk-accent-fill:#e37e9b;--tk-accent-text:#e37e9b}
+:root[data-theme="dark"][data-cat="film"]      {--tk-cat:#8a3fb8;--tk-accent:#c47af6;--tk-accent-fill:#c47af6;--tk-accent-text:#c47af6}
+:root[data-theme="dark"][data-cat="utility"]   {--tk-cat:#3b6fd1;--tk-accent:#659dff;--tk-accent-fill:#659dff;--tk-accent-text:#659dff}
 
 /* ---------- Basi comuni ---------- */
 html{-webkit-text-size-adjust:100%}
 body{font-family:var(--tk-font);background:var(--tk-bg);color:var(--tk-text);-webkit-font-smoothing:antialiased}
-::selection{background:color-mix(in srgb,var(--tk-accent) 25%,transparent)}
+::selection{background:color-mix(in srgb,var(--tk-cat) 25%,transparent)}
 
-/* Etichetta in monospazio (sezioni, categorie, metadati) */
-.tk-label{font:500 11px/1.3 var(--tk-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--tk-faint)}
-.tk-mono{font-family:var(--tk-mono);font-variant-numeric:tabular-nums}
+/* Etichetta (sezioni, categorie, metadati): frase normale, mai tutto maiuscolo */
+.tk-label{font:700 13px/1.3 var(--tk-font);letter-spacing:0;text-transform:none;color:var(--tk-muted)}
+.tk-mono,.tk-num{font-variant-numeric:tabular-nums}
 
-/* Pulsante tema (chiaro ↔ scuro) */
+/* Pulsante tema (chiaro ↔ scuro): tondo, sulla superficie */
 .tk-theme-btn{
-  display:inline-grid;place-items:center;flex:none;width:40px;height:40px;padding:0;cursor:pointer;
-  border:1px solid var(--tk-line);border-radius:var(--tk-radius);background:var(--tk-surface);color:var(--tk-muted);
-  transition:color .15s,border-color .15s;
+  display:inline-grid;place-items:center;flex:none;width:44px;height:44px;padding:0;cursor:pointer;
+  border:0;border-radius:var(--tk-radius-pill);background:var(--tk-surface);color:var(--tk-text);
+  transition:background .15s,color .15s;
 }
-.tk-theme-btn:hover{color:var(--tk-text);border-color:var(--tk-line-strong)}
-.tk-theme-btn:focus-visible{outline:2px solid var(--tk-accent);outline-offset:2px}
-.tk-theme-btn svg{width:18px;height:18px}
-.tk-theme-btn[data-size="sm"]{width:34px;height:34px}
-.tk-theme-btn[data-size="sm"] svg{width:16px;height:16px}
+.tk-theme-btn:hover{background:var(--tk-accent-soft);color:var(--tk-accent-text)}
+.tk-theme-btn:focus-visible{outline:3px solid var(--tk-accent-fill);outline-offset:2px}
+.tk-theme-btn svg{width:20px;height:20px}
+.tk-theme-btn[data-size="sm"]{width:40px;height:40px}
+.tk-theme-btn[data-size="sm"] svg{width:18px;height:18px}
 
-@media (prefers-reduced-motion:reduce){.tk-theme-btn{transition:none}}
+/* =====================================================================
+   COMPONENTI PRONTI per i nuovi applicativi (facoltativi ma consigliati).
+   Esempi d'uso in docs/IDENTITA-VISIVA.md.
+   ===================================================================== */
+.tk-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;
+  border:0;border-radius:var(--tk-radius);font:700 1rem/1.1 var(--tk-font);text-decoration:none;cursor:pointer;
+  background:var(--tk-surface-2);color:var(--tk-text);box-shadow:inset 0 0 0 1.5px var(--tk-line);
+  transition:background .15s,box-shadow .15s;
+}
+.tk-btn svg{width:20px;height:20px;flex:none}
+.tk-btn:hover{box-shadow:inset 0 0 0 1.5px var(--tk-line-strong)}
+.tk-btn:focus-visible{outline:3px solid var(--tk-accent-fill);outline-offset:2px}
+.tk-btn:disabled{opacity:.55;cursor:default}
+.tk-btn--primary{background:var(--tk-accent-fill);color:var(--tk-on-accent);box-shadow:none}
+.tk-btn--primary:hover{background:var(--tk-accent-strong);box-shadow:none}
+.tk-btn--tint{background:var(--tk-accent-soft);color:var(--tk-accent-text);box-shadow:none}
+.tk-btn--tint:hover{box-shadow:inset 0 0 0 1.5px currentColor}
+.tk-btn--danger{background:var(--tk-danger);color:var(--tk-on-accent);box-shadow:none}
+.tk-btn--sm{min-height:40px;padding:0 14px;font-size:.92rem;border-radius:var(--tk-radius-field)}
+.tk-btn--icon{width:44px;min-height:44px;padding:0;border-radius:var(--tk-radius-pill)}
+
+.tk-chip{
+  display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;flex:none;
+  border:0;border-radius:var(--tk-radius-pill);background:var(--tk-surface);color:var(--tk-text);
+  font:700 .95rem/1 var(--tk-font);cursor:pointer;
+}
+.tk-chip[aria-pressed="true"]{background:var(--tk-accent-soft);color:var(--tk-accent-text)}
+.tk-chip:focus-visible{outline:3px solid var(--tk-accent-fill);outline-offset:2px}
+
+.tk-seg{display:inline-flex;padding:4px;gap:2px;border-radius:var(--tk-radius-pill);background:var(--tk-surface-2);box-shadow:inset 0 0 0 1px var(--tk-line)}
+.tk-seg > button{min-height:40px;padding:0 16px;border:0;border-radius:var(--tk-radius-pill);background:transparent;color:var(--tk-muted);font:700 .95rem/1 var(--tk-font);cursor:pointer}
+.tk-seg > button[aria-pressed="true"]{background:var(--tk-surface);color:var(--tk-text);box-shadow:0 1px 3px rgba(28,36,48,.18)}
+
+.tk-field{display:flex;flex-direction:column;gap:8px}
+.tk-field > label,.tk-field > .tk-field-label{font:700 .95rem/1.3 var(--tk-font);color:var(--tk-text)}
+.tk-input{
+  width:100%;box-sizing:border-box;min-height:52px;padding:0 16px;border:0;border-radius:var(--tk-radius-field);
+  background:var(--tk-surface);color:var(--tk-text);font:400 1.06rem/1.3 var(--tk-font);
+  box-shadow:inset 0 0 0 1.5px var(--tk-line-strong);
+}
+.tk-input:focus{outline:none;box-shadow:inset 0 0 0 2px var(--tk-accent-fill),0 0 0 4px var(--tk-accent-soft)}
+
+.tk-card{background:var(--tk-surface);border-radius:var(--tk-radius-lg);padding:var(--tk-s5)}
+.tk-row{display:flex;align-items:center;gap:12px;min-height:64px;padding:0 16px;background:var(--tk-surface);border-radius:20px;color:inherit;text-decoration:none}
+
+.tk-badge{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:var(--tk-radius-pill);font:700 .8rem/1 var(--tk-font);font-variant-numeric:tabular-nums;white-space:nowrap;background:var(--tk-accent-soft);color:var(--tk-accent-text)}
+.tk-badge--fill{background:var(--tk-accent-fill);color:var(--tk-on-accent)}
+.tk-badge--neutral{background:var(--tk-surface-2);color:var(--tk-muted);box-shadow:inset 0 0 0 1px var(--tk-line)}
+
+.tk-icon-disc{display:grid;place-items:center;width:44px;height:44px;flex:none;border-radius:var(--tk-radius-pill);background:var(--tk-accent-soft);color:var(--tk-accent-text)}
+.tk-icon-disc svg{width:22px;height:22px}
+
+/* Barra di navigazione in basso, sospesa (telefono) */
+.tk-nav{
+  position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:30;
+  display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;padding:6px;
+  border-radius:var(--tk-radius-pill);background:var(--tk-surface);box-shadow:var(--tk-shadow-float);
+}
+.tk-nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:56px;border-radius:var(--tk-radius-pill);color:var(--tk-muted);text-decoration:none;font:700 .75rem/1.1 var(--tk-font)}
+.tk-nav a[aria-current="page"]{background:var(--tk-accent-soft);color:var(--tk-accent-text)}
+.tk-nav a svg{width:22px;height:22px}
+
+@media (prefers-reduced-motion:reduce){.tk-theme-btn,.tk-btn{transition:none}}
