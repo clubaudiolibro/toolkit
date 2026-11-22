@@ -1,7 +1,7 @@
 /**
  * views/altro.js — «Altro»: esporta CSV, import da Letterboxd, chiave TMDB, crediti e informazioni.
  */
-import { el, icon, toast, confirmDialog } from '../ui.js';
+import { el, icon, toast, confirmDialog, customSheet } from '../ui.js';
 import { loadKey, hasKey, removeKey } from '../tmdb.js';
 import { APP_VERSION } from '../config.js';
 import * as store from '../store.js';
@@ -20,6 +20,25 @@ export function creditsCard() {
     el('p', { text: 'This product uses the TMDB API but is not endorsed or certified by TMDB.' }),
     el('p', { class: 'small', text: 'Titoli, trame, generi, durate e locandine provengono da The Movie Database (TMDB). Le locandine non vengono salvate: si caricano da TMDB ogni volta che servono.' }),
     el('p', { class: 'small', text: 'FilmShelf ' + APP_VERSION + ' · parte della Toolbox.' }));
+}
+
+/** Foglio «Importa»: Letterboxd (la procedura già presente) oppure CSV di FilmShelf (selezione del file). */
+function chooseImport(input) {
+  return customSheet((sheet, close) => {
+    sheet.append(
+      el('div', { class: 'sheet-head' },
+        el('h2', { class: 'sheet-title', text: 'Importa' }),
+        el('button', { type: 'button', class: 'icon-btn muted', 'aria-label': 'Chiudi', on: { click: () => close() } }, icon('close'))),
+      el('div', { class: 'stack' },
+        el('button', { type: 'button', class: 'btn btn-big btn-block', autofocus: true, on: { click: () => { close(); location.hash = '#/altro/importa-letterboxd'; } } },
+          icon('upload'), 'Importa da Letterboxd'),
+        el('p', { class: 'sheet-text small', text: 'Una volta sola: porta qui i film visti, i voti e le date dall’export di Letterboxd (meglio dal PC).' }),
+        // il selettore del file va aperto subito, nello stesso gesto del tocco (altrimenti il telefono può bloccarlo)
+        el('button', { type: 'button', class: 'btn btn-big btn-block', on: { click: () => { close(); input.click(); } } },
+          icon('upload'), 'Importa da CSV'),
+        el('p', { class: 'sheet-text small', text: 'Ripristina i film da un file nel formato di «Esporta CSV». I film già presenti non vengono toccati.' })),
+    );
+  });
 }
 
 /** Legge il file scelto, mostra il riepilogo, chiede conferma e importa. */
@@ -78,23 +97,15 @@ export async function render(ctx) {
       on: { click: () => { const k = exportCsv(); toast(k + (k === 1 ? ' film esportato.' : ' film esportati.'), 'ok'); } },
     }, icon('backup'), n ? 'Esporta CSV (' + n + ' film)' : 'Nessun film da esportare')));
 
-  // Importa da CSV di FilmShelf (ripristino da copia di sicurezza)
+  // Importa: si sceglie tra Letterboxd (procedura guidata, una tantum) e CSV di FilmShelf (ripristino)
   if (!store.isOffline()) {
     const input = el('input', { type: 'file', accept: '.csv,text/csv', hidden: true, on: { change: () => importFromFile(input, ctx) } });
-    view.appendChild(el('div', { class: 'card pad' },
-      el('h2', { class: 'card-title' }, icon('upload'), 'Importa da CSV'),
-      el('p', { text: 'Carica un file nel formato di «Esporta CSV» per ripristinare i film. Quelli già presenti nell’archivio non vengono toccati né duplicati.' }),
-      el('button', { type: 'button', class: 'btn btn-block', on: { click: () => input.click() } }, icon('upload'), 'Scegli il file CSV'),
-      input));
-  }
-
-  // import Letterboxd (sezione rimovibile)
-  if (!store.isOffline()) {
-    view.appendChild(el('a', { class: 'card pad row-link', href: '#/altro/importa-letterboxd' },
+    view.appendChild(input);
+    view.appendChild(el('a', { class: 'card pad row-link', href: '#/altro', on: { click: e => { e.preventDefault(); chooseImport(input); } } },
       el('span', { class: 'row-icon' }, icon('upload')),
       el('span', { class: 'row-main' },
-        el('span', { class: 'row-title', text: 'Importa da Letterboxd' }),
-        el('span', { class: 'row-sub', text: 'Una volta sola: porta qui i film visti, i voti e le date (meglio dal PC).' })),
+        el('span', { class: 'row-title', text: 'Importa' }),
+        el('span', { class: 'row-sub', text: 'Da Letterboxd (una volta sola) oppure da un CSV di FilmShelf per ripristinare i film.' })),
       icon('chevron', 'ico chev')));
   }
 
