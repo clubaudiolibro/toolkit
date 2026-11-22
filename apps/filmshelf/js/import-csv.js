@@ -7,11 +7,11 @@
  * - serve almeno tmdb_id (il database non accetta film senza) e un titolo;
  * - i film già presenti nell'archivio (stesso tmdb_id) non vengono toccati né duplicati;
  * - un film ripetuto nel file conta una volta sola (vale la prima riga);
- * - valori fuori regola (voto non da 1 a 10 a passi di 0,5, data o anno non validi, luoghi sconosciuti)
+ * - valori fuori regola (voto non da 1 a 10 a passi di 0,5, data o anno non validi)
  *   non bloccano il film: quel campo viene lasciato vuoto.
  */
 import { parseCsv } from './csv.js';
-import { LUOGHI } from './config.js';
+import { TAG_MAX } from './config.js';
 
 /** Colonne indispensabili: senza, il file non è un CSV di FilmShelf. */
 const REQUIRED = ['titolo_it', 'tmdb_id', 'stato'];
@@ -72,7 +72,8 @@ export function parseFilmCsv(text, existingIds = new Set()) {
     if (existingIds.has(tmdb)) { already++; continue; }
 
     const anno = toInt(r.anno);
-    const luoghi = splitList(r.luoghi).filter(l => LUOGHI.includes(l));
+    // la colonna si chiama ancora «luoghi» (compatibilità con i vecchi backup): contiene i tag, anche quelli creati dall'utente
+    const luoghi = splitList(r.luoghi).map(l => l.slice(0, TAG_MAX));
     const row = {
       tmdb_id: tmdb,
       titolo_it: titolo,
@@ -86,7 +87,7 @@ export function parseFilmCsv(text, existingIds = new Set()) {
       data_visione: toDate(r.data_visione),
       voto: toVoto(r.voto),
       note: r.note || null,
-      luoghi: [...new Set(luoghi)],
+      luoghi: [...new Map(luoghi.map(l => [l.toLocaleLowerCase('it'), l])).values()],
     };
     const creato = toTimestamp(r.creato_il);
     if (creato) row.creato_il = creato;       // mantiene l'ordine «aggiunti di recente» del backup

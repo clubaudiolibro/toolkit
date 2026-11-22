@@ -4,6 +4,7 @@
  */
 import { initDb, schemaVersion, DbError } from './js/db.js';
 import * as store from './js/store.js';
+import * as tags from './js/tags.js';
 import { SCHEMA_VERSION } from './js/config.js';
 import { el, icon, confirmDialog } from './js/ui.js';
 import * as films from './js/views/films.js';
@@ -181,6 +182,7 @@ function registerServiceWorker() {
 /** Senza rete: se c'è una copia dei film salvata nel browser la mostra in sola lettura. */
 function tryOffline() {
   if (!store.loadCache()) return false;
+  tags.load({ offline: true });
   return true;
 }
 
@@ -197,6 +199,7 @@ async function start() {
     const v = await schemaVersion();
     if (v == null || v < SCHEMA_VERSION) { showSetup(v); return; }
     await store.loadAll();
+    await tags.load();
   } catch (e) {
     console.warn('Supabase non raggiungibile:', e.message);
     if (!tryOffline()) {

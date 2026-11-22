@@ -7,13 +7,15 @@
  *   - lista:   una riga per film (miniatura, titolo, anno, voto, data);
  *   - schede:  una scheda per film con quasi tutti i dati.
  * Toccando un film si apre la scheda di dettaglio (views/film.js).
- * Sopra l'elenco: ricerca per titolo (italiano e originale) e ordinamento, sempre a portata.
+ * Sopra l'elenco: ricerca per titolo (italiano e originale), ordinamento e, nei film visti, filtro per tag
+ * (uno o più, con scelta tra «almeno uno» e «tutti»), sempre a portata.
  */
-import { el, icon, fmtDate, fmtVoto, fmtDurata, norm } from '../ui.js';
+import { el, icon, fmtDate, fmtVoto, fmtDurata, norm, customSheet } from '../ui.js';
 import { poster } from '../components.js';
 import { markAsSeen } from '../actions.js';
 import { KEYS } from '../config.js';
 import * as store from '../store.js';
+import * as tags from '../tags.js';
 
 export const MODES = [
   { id: 'griglia', label: 'Griglia', icon: 'grid' },
@@ -38,7 +40,10 @@ const SORTS = {
 };
 
 /* Stato che resta finché la pagina è aperta: testo cercato e posizione di scorrimento. */
-const memory = { visto: { q: '', y: 0 }, watchlist: { q: '', y: 0 } };
+const memory = {
+  visto: { q: '', y: 0, tags: [], all: false },      // tags: tag scelti per il filtro; all: true = servono tutti
+  watchlist: { q: '', y: 0, tags: [], all: false },
+};
 
 function getMode() {
   const m = localStorage.getItem(KEYS.view);
@@ -76,6 +81,53 @@ export function searchFilms(films, q) {
     const hay = norm(f.titolo_it + ' ' + (f.titolo_originale || ''));
     return words.every(w => hay.includes(w));
   });
+}
+
+/** Filtra per tag: con all = false basta uno dei tag scelti, con all = true servono tutti. */
+export function filterByTags(films, chosen, all = false) {
+  if (!chosen.length) return films;
+  return films.filter(f => {
+    const t = f.luoghi || [];
+    return all ? chosen.every(c => t.includes(c)) : chosen.some(c => t.includes(c));
+  });
+}
+
+/** Foglio per scegliere i tag del filtro. Restituisce { tags, all } oppure null se annullato. */
+function tagFilterSheet(current, currentAll) {
+  return customSheet((sheet, close) => {
+    const chosen = new Set(current);
+    let all = currentAll;
+    const list = tags.all();
+    const chips = el('div', { class: 'chips' }, list.map(t => el('button', {
+      type: 'button', class: 'chip', text: t, 'aria-pressed': String(chosen.has(t)),
+      on: { click: e => { chosen.has(t) ? chosen.delete(t) : chosen.add(t); e.currentTarget.setAttribute('aria-pressed', String(chosen.has(t))); updateHint(); } },
+    })));
+    const modeBtns = [[false, 'Almeno uno'], [true, 'Tutti']].map(([v, label]) => el('button', {
+      type: 'button', class: 'chip', text: label, 'aria-pressed': String(all === v),
+      on: { click: () => { all = v; modeBtns.forEach((b, i) => b.setAttribute('aria-pressed', String((i === 1) === all))); updateHint(); } },
+    }));
+    const hint = el('p', { class: 'small muted-text' });
+    function updateHint() {
+      const n = chosen.size;
+      hint.textContent = n < 2 ? '' : (all ? 'Mostro i film che hanno tutti i tag scelti.' : 'Mostro i film che hanno almeno uno dei tag scelti.');
+    }
+    updateHint();
+    sheet.append(
+      el('div', { class: 'sheet-head' },
+        el('h2', { class: 'sheet-title', text: 'Filtra per tag' }),
+        el('button', { type: 'button', class: 'icon-btn muted', 'aria-label': 'Chiudi', on: { click: () => close(null) } }, icon('close'))),
+      el('div', { class: 'form sheet-form-gap' },
+        el('div', { class: 'field' },
+          el('span', { class: 'field-label' }, 'Tag ', el('span', { class: 'opt', text: '(uno o più)' })),
+          chips),
+        el('div', { class: 'field' },
+          el('span', { class: 'field-label', text: 'Quando ne scegli più di uno' }),
+          el('div', { class: 'chips' }, modeBtns),
+          hint)),
+      el('div', { class: 'sheet-actions' },
+        el('button', { type: 'button', class: 'btn', text: 'Azzera', on: { click: () => close({ tags: [], all: false }) } }),
+        el('button', { type: 'button', class: 'btn btn-primary', text: 'Applica', on: { click: () => close({ tags: list.filter(t => chosen.has(t)), all }) } })));
+  }).then(v => v || null);
 }
 
 /** Selettore della modalità (va nella barra in alto, sempre visibile). */
@@ -183,23 +235,58 @@ export async function render(ctx) {
   }
   updateDir();
 
+  // Filtro per tag (solo film visti: la watchlist non ha tag)
+  const withTags = stato === 'visto';
+  const filterBtn = withTags ? el('button', {
+    type: 'button', class: 'btn btn-sm filter-btn', on: { click: async () => {
+      const r = await tagFilterSheet(mem.tags.filter(t => tags.all().includes(t)), mem.all);
+      if (!r) return;
+      mem.tags = r.tags; mem.all = r.all; draw();
+    } },
+  }) : null;
+  const activeTags = el('div', { class: 'chips small active-tags' });
+  function updateFilter() {
+    if (!withTags) return;
+    // se un tag scelto non esiste più lo si toglie dal filtro
+    const known = tags.all();
+    mem.tags = mem.tags.filter(t => known.includes(t));
+    filterBtn.textContent = '';
+    filterBtn.appendChild(icon('tag'));
+    filterBtn.appendChild(document.createTextNode('Tag'));
+    if (mem.tags.length) filterBtn.appendChild(el('span', { class: 'filter-badge', text: String(mem.tags.length) }));
+    filterBtn.setAttribute('aria-label', mem.tags.length ? 'Filtra per tag (' + mem.tags.length + ' scelti)' : 'Filtra per tag');
+    filterBtn.classList.toggle('active', mem.tags.length > 0);
+    activeTags.textContent = '';
+    activeTags.hidden = !mem.tags.length;
+    mem.tags.forEach(t => activeTags.appendChild(el('button', {
+      type: 'button', class: 'tag tag-removable', title: 'Togli il filtro «' + t + '»', 'aria-label': 'Togli il filtro ' + t,
+      on: { click: () => { mem.tags = mem.tags.filter(x => x !== t); draw(); } },
+    }, t, icon('close'))));
+    if (mem.tags.length > 1) activeTags.prepend(el('span', { class: 'row-sub', text: mem.all ? 'Tutti:' : 'Almeno uno:' }));
+  }
+
   const count = el('p', { class: 'count', 'aria-live': 'polite' });
   const box = el('div', { class: 'films' });
   ctx.view.append(
     el('div', { class: 'toolbar' },
-      el('label', { class: 'search' }, icon('search'), input, clear),
+      el('div', { class: 'search-row' },
+        el('label', { class: 'search' }, icon('search'), input, clear),
+        filterBtn),
       el('div', { class: 'sort' }, icon('sort'), select, dir)),
+    withTags ? activeTags : null,
     count, box);
 
   function draw() {
     clear.hidden = !mem.q;
-    const list = sortFilms(searchFilms(all, mem.q), stato, sort);
-    count.textContent = mem.q
+    updateFilter();
+    const filtered = withTags && mem.tags.length > 0;
+    const list = sortFilms(filterByTags(searchFilms(all, mem.q), withTags ? mem.tags : [], mem.all), stato, sort);
+    count.textContent = mem.q || filtered
       ? (list.length === 1 ? '1 film trovato' : list.length + ' film trovati') + ' su ' + all.length
       : (all.length === 1 ? '1 film' : all.length + ' film');
     box.textContent = '';
     if (!list.length) {
-      box.appendChild(el('p', { class: 'empty', text: 'Nessun film con questo titolo.' }));
+      box.appendChild(el('p', { class: 'empty', text: filtered ? 'Nessun film con questi tag' + (mem.q ? ' e questo titolo.' : '.') : 'Nessun film con questo titolo.' }));
       return;
     }
     const href = f => '#/film/' + f.id;

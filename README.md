@@ -256,10 +256,10 @@ Stile comune della Toolbox (vedi «Stile e tema»), accento della categoria Film
 - **Database:** `supabase/filmshelf.sql` (una volta sola nel SQL Editor; rilanciabile senza perdere dati).
   Tabelle con prefisso `filmshelf_`, RLS attiva (ognuno vede solo le proprie righe), nessun accesso per `anon`.
   - `filmshelf_film`: una riga per film (una sola visione: se lo si rivede si aggiornano data e voto).
-    `tmdb_id` unico per utente; `stato` `visto` | `watchlist`; `voto` 1–10 a passi di 0,5; `luoghi` solo
-    `Cinema`, `The Space Pass`, `Casa`; `aggiornato_il` si aggiorna da solo.
-  - `filmshelf_impostazioni`: la chiave TMDB (una riga per utente).
-  - Versione dello schema in `filmshelf_schema_version()` e in `SCHEMA_VERSION` di `apps/filmshelf/js/config.js` (attuale: 1).
+    `tmdb_id` unico per utente; `stato` `visto` | `watchlist`; `voto` 1–10 a passi di 0,5; `luoghi` = i **tag**
+    (nell'app si chiamano «tag»; liberi, nessun vincolo: all'inizio `Cinema`, `The Space Pass`, `Casa`); `aggiornato_il` si aggiorna da solo.
+  - `filmshelf_impostazioni`: la chiave TMDB e `tag_elenco` (elenco dei tag disponibili; null = i tre di partenza), una riga per utente. I tag si creano col «+» nel modulo Visto (`js/tags.js`).
+  - Versione dello schema in `filmshelf_schema_version()` e in `SCHEMA_VERSION` di `apps/filmshelf/js/config.js` (attuale: 2).
 - **Chiave TMDB:** non è mai nel codice. La prima volta l'app la chiede (Aggiungi o Altro), la prova su TMDB e la
   salva in `filmshelf_impostazioni`; dopo il login la legge e chiama TMDB direttamente dal browser.
   Vanno bene sia la «Chiave API» (32 caratteri, inviata come `api_key`) sia il «Token di accesso in lettura»
@@ -274,14 +274,14 @@ Stile comune della Toolbox (vedi «Stile e tema»), accento della categoria Film
   Ricerca su titolo italiano e originale (senza badare ad accenti e maiuscole) e ordinamento sempre in cima:
   visti per data di visione, voto, titolo, anno; watchlist per data di aggiunta, titolo, anno, durata; un tasto
   inverte il verso; i valori mancanti vanno sempre in fondo (scelta ricordata in `filmshelf.sort.<stato>`).
-- **Scheda del film** (`#/film/<id>`, `js/views/film.js`): tutti i dati, «Modifica» (data, voto, luoghi, note),
+- **Scheda del film** (`#/film/<id>`, `js/views/film.js`): tutti i dati, «Modifica» (data, voto, tag, note),
   «Elimina» con conferma, «Sposta in watchlist»; per la watchlist «Segna come visto».
 - **Statistiche** (`js/views/stats.js`, grafici in HTML/CSS senza librerie, un solo colore con i valori scritti):
   numeri principali (film visti, ore, voto medio), film per anno e per mese (scelta dell'anno; i film senza data non
-  contano), generi più visti, distribuzione dei voti (19 gradini), ore per luogo (un film in più luoghi conta per
-  ciascuno, più «Non indicato»), watchlist (numero, durata media e totale).
+  contano), generi più visti, distribuzione dei voti (19 gradini), film visti per tag (numero e quota) e ore per tag
+  (un film con più tag conta per ciascuno, più «Senza tag»), watchlist (numero, durata media e totale).
 - **Esporta CSV** (Altro, `js/export.js`): `filmshelf-AAAA-MM-GG.csv` con tutti i film e tutte le colonne della
-  tabella (separatore `;`, UTF-8 con BOM, voto con la virgola, generi e luoghi separati da ` | `).
+  tabella (separatore `;`, UTF-8 con BOM, voto con la virgola, generi e tag separati da ` | `; la colonna dei tag si chiama ancora `luoghi` per compatibilità coi backup).
 - **Import da Letterboxd** (Altro → «Importa da Letterboxd», `#/altro/importa-letterboxd`). **Sezione isolata** nella
   cartella `apps/filmshelf/import-letterboxd/`: per toglierla si cancella la cartella, le due righe segnate
   «import Letterboxd» in `app.js`, il blocco con lo stesso commento in `js/views/altro.js` e i suoi file

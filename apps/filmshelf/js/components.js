@@ -1,10 +1,12 @@
 /**
  * components.js — pezzi di interfaccia riusati in più schermate:
- * locandina, controllo del voto, scelta dei luoghi, modulo «Visto».
+ * locandina, controllo del voto, scelta dei tag, modulo «Visto».
  */
-import { el, icon, customSheet, todayIso, fmtVoto } from './ui.js';
+import { el, icon, customSheet, promptDialog, toast, todayIso, fmtVoto } from './ui.js';
 import { posterUrl } from './tmdb.js';
-import { LUOGHI, TMDB } from './config.js';
+import { TMDB } from './config.js';
+import * as tags from './tags.js';
+import * as store from './store.js';
 
 /**
  * Locandina con caricamento pigro (lazy). Senza locandina, o senza rete, mostra un riquadro
@@ -62,35 +64,62 @@ export function votoInput(initial = null) {
   return { node, get: () => value };
 }
 
-/** Scelta multipla dei luoghi. Restituisce { node, get() } con l'array dei luoghi scelti. */
-export function luoghiInput(initial = []) {
+/**
+ * Scelta multipla dei tag, con il pulsante «+» per crearne di nuovi.
+ * Restituisce { node, addBtn, get() }: node sono le pillole, addBtn il «+» da mettere accanto all'etichetta,
+ * get() l'array dei tag scelti (nell'ordine dell'elenco).
+ */
+export function tagInput(initial = []) {
   const chosen = new Set(initial || []);
-  const node = el('div', { class: 'chips' }, LUOGHI.map(l => {
-    const b = el('button', {
-      type: 'button', class: 'chip', text: l, 'aria-pressed': String(chosen.has(l)),
-      on: { click: () => { chosen.has(l) ? chosen.delete(l) : chosen.add(l); b.setAttribute('aria-pressed', String(chosen.has(l))); } },
-    });
-    return b;
-  }));
-  return { node, get: () => LUOGHI.filter(l => chosen.has(l)) };
+  const node = el('div', { class: 'chips' });
+
+  function draw() {
+    node.textContent = '';
+    for (const t of tags.all()) {
+      node.appendChild(el('button', {
+        type: 'button', class: 'chip', text: t, 'aria-pressed': String(chosen.has(t)),
+        on: { click: e => { chosen.has(t) ? chosen.delete(t) : chosen.add(t); e.currentTarget.setAttribute('aria-pressed', String(chosen.has(t))); } },
+      }));
+    }
+  }
+
+  async function create() {
+    if (store.isOffline()) { toast('Senza connessione non si possono creare tag.', 'error'); return; }
+    const name = await promptDialog({ title: 'Nuovo tag', label: 'Nome del tag', placeholder: 'Es. Cinema all’aperto', ok: 'Crea il tag' });
+    if (!name) return;
+    try {
+      const { tag, created } = await tags.add(name);
+      chosen.add(tag);
+      draw();
+      toast(created ? 'Tag «' + tag + '» creato.' : 'Il tag «' + tag + '» esisteva già: l’ho selezionato.', 'ok');
+    } catch (e) {
+      if (e.validation) toast(e.message, 'error');   // gli errori del database sono già stati mostrati da db.js
+    }
+  }
+
+  const addBtn = el('button', {
+    type: 'button', class: 'tag-add', title: 'Crea un nuovo tag', 'aria-label': 'Crea un nuovo tag', on: { click: create },
+  }, icon('plus'));
+  draw();
+  return { node, addBtn, get: () => tags.all().filter(t => chosen.has(t)) };
 }
 
 /**
- * Modulo «Visto» in un foglio: data di visione, voto, note, luoghi.
+ * Modulo «Visto» in un foglio: data di visione, voto, note, tag.
  * film: dati del film (per il titolo in alto); values: valori iniziali.
- * Restituisce { data_visione, voto, note, luoghi } oppure null se annullato.
+ * Restituisce { data_visione, voto, note, luoghi } (luoghi = i tag) oppure null se annullato.
  */
 export function vistoSheet(film, values = {}, { title = 'Segna come visto', ok = 'Salva' } = {}) {
   return customSheet((sheet, close) => {
     const date = el('input', { type: 'date', class: 'input', value: values.data_visione === undefined ? todayIso() : (values.data_visione || ''), max: '2100-12-31' });
     const voto = votoInput(values.voto);
-    const luoghi = luoghiInput(values.luoghi);
+    const tagSel = tagInput(values.luoghi);
     const note = el('textarea', { class: 'input', rows: 3, placeholder: 'Impressioni, con chi l’hai visto…', value: values.note || '' });
     const form = el('form', {
       class: 'form',
       on: { submit: e => {
         e.preventDefault();
-        close({ data_visione: date.value || null, voto: voto.get(), note: note.value.trim() || null, luoghi: luoghi.get() });
+        close({ data_visione: date.value || null, voto: voto.get(), note: note.value.trim() || null, luoghi: tagSel.get() });
       } },
     },
       el('div', { class: 'sheet-head' },
@@ -106,8 +135,10 @@ export function vistoSheet(film, values = {}, { title = 'Segna come visto', ok =
         el('span', { class: 'field-label', text: 'Voto ' }, el('span', { class: 'opt', text: '(facoltativo)' })),
         voto.node),
       el('div', { class: 'field' },
-        el('span', { class: 'field-label', text: 'Dove ' }, el('span', { class: 'opt', text: '(anche più di uno)' })),
-        luoghi.node),
+        el('div', { class: 'field-head' },
+          el('span', { class: 'field-label' }, 'Tag ', el('span', { class: 'opt', text: '(anche più di uno)' })),
+          tagSel.addBtn),
+        tagSel.node),
       el('div', { class: 'field' },
         el('label', { class: 'field-label', text: 'Note ' }, el('span', { class: 'opt', text: '(facoltative)' })),
         note),

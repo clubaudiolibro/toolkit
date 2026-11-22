@@ -1,12 +1,13 @@
 /**
  * export.js — «Esporta CSV»: tutti i film con tutti i dati, come copia di sicurezza.
  * File filmshelf-AAAA-MM-GG.csv, separatore ";", UTF-8 con BOM (si apre direttamente in Excel in italiano),
- * voto con la virgola, elenchi (generi, luoghi) separati da " | ".
+ * voto con la virgola, elenchi (generi, tag) separati da " | ".
  */
 import { buildCsv, download } from './csv.js';
 import { todayIso } from './ui.js';
 import * as store from './store.js';
 
+/** La colonna «luoghi» contiene i tag (nome storico, tenuto per non rompere i backup già fatti). */
 export const COLUMNS = ['titolo_it', 'titolo_originale', 'anno', 'stato', 'data_visione', 'voto', 'luoghi', 'note',
   'durata_min', 'generi', 'trama', 'tmdb_id', 'poster_path', 'creato_il', 'aggiornato_il', 'id'];
 

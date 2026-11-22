@@ -6,12 +6,12 @@
  *   - film visti per anno e per mese (si sceglie l'anno)
  *   - generi più visti
  *   - voto medio e distribuzione dei voti
- *   - ore totali e ripartizione per luogo
+ *   - film visti per tag (numero e quota) e ore per tag
  *   - watchlist: numero di film, durata media e totale
  */
 import { el, icon, fmtVoto } from '../ui.js';
-import { LUOGHI } from '../config.js';
 import * as store from '../store.js';
+import * as tags from '../tags.js';
 
 const MESI = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
 const MESI_LUNGHI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
@@ -22,7 +22,7 @@ const fmtNum = (n, dec = 0) => n.toLocaleString('it-IT', { minimumFractionDigits
 /** Ore con una cifra decimale: 125 min → "2,1". */
 const ore = min => fmtNum(min / 60, min / 60 >= 100 ? 0 : 1);
 
-export function computeStats(films) {
+export function computeStats(films, tagList = []) {
   const visti = films.filter(f => f.stato === 'visto');
   const wl = films.filter(f => f.stato === 'watchlist');
 
@@ -48,14 +48,14 @@ export function computeStats(films) {
   for (const f of conVoto) distrib[Math.round((Number(f.voto) - 1) * 2)].n++;
   const media = conVoto.length ? conVoto.reduce((s, f) => s + Number(f.voto), 0) / conVoto.length : null;
 
-  // ore e luoghi (un film visto in più luoghi conta per ciascuno)
+  // ore e tag (un film con più tag conta per ciascuno)
   const minTot = visti.reduce((s, f) => s + (f.durata_min || 0), 0);
-  const luoghi = LUOGHI.map(l => {
-    const fs = visti.filter(f => (f.luoghi || []).includes(l));
-    return { luogo: l, n: fs.length, min: fs.reduce((s, f) => s + (f.durata_min || 0), 0) };
+  const perTag = tagList.map(t => {
+    const fs = visti.filter(f => (f.luoghi || []).includes(t));
+    return { tag: t, n: fs.length, min: fs.reduce((s, f) => s + (f.durata_min || 0), 0) };
   });
-  const senzaLuogo = visti.filter(f => !(f.luoghi || []).length);
-  luoghi.push({ luogo: 'Non indicato', n: senzaLuogo.length, min: senzaLuogo.reduce((s, f) => s + (f.durata_min || 0), 0), muted: true });
+  const senzaTag = visti.filter(f => !(f.luoghi || []).length);
+  const noTag = { tag: 'Senza tag', n: senzaTag.length, min: senzaTag.reduce((s, f) => s + (f.durata_min || 0), 0), muted: true };
 
   // watchlist
   const wlDur = wl.filter(f => f.durata_min);
@@ -65,7 +65,7 @@ export function computeStats(films) {
     visti: visti.length, senzaData, perAnno, perMese,
     generi: [...generi].map(([g, n]) => ({ g, n })).sort((a, b) => b.n - a.n || a.g.localeCompare(b.g, 'it')),
     conVoto: conVoto.length, media, distrib,
-    minTot, senzaDurata: visti.filter(f => !f.durata_min).length, luoghi,
+    minTot, senzaDurata: visti.filter(f => !f.durata_min).length, perTag, noTag,
     wl: { n: wl.length, min: wlMin, media: wlDur.length ? wlMin / wlDur.length : null },
   };
 }
@@ -112,7 +112,7 @@ const note = text => el('p', { class: 'chart-note', text });
 
 export async function render(ctx) {
   ctx.setTitle('Statistiche');
-  const s = computeStats(store.all());
+  const s = computeStats(store.all(), tags.all());
   const view = ctx.view;
 
   if (!s.visti && !s.wl.n) {
@@ -179,15 +179,23 @@ export async function render(ctx) {
         { aria: 'Numero di film per voto', small: true })));
   }
 
-  // Ore e luoghi
+  // Film per tag (conteggio) e ore per tag
   if (s.visti) {
-    view.appendChild(section('Ore viste per luogo', 'timer',
+    const byCount = s.perTag.slice().sort((a, b) => b.n - a.n || a.tag.localeCompare(b.tag, 'it'));
+    const rows = [...byCount, s.noTag].filter(t => t.n || !t.muted);
+    const pct = n => fmtNum(n / s.visti * 100) + '%';
+    view.appendChild(section('Film visti per tag', 'folder',
+      el('div', { class: 'stats stats-inline' }, byCount.slice(0, 3).map(t => tile(fmtNum(t.n), t.tag, pct(t.n) + ' dei film visti'))),
+      hbars(rows.map(t => ({ label: t.tag, value: t.n, muted: t.muted, text: fmtNum(t.n) + ' · ' + pct(t.n) })), { aria: 'Film visti per tag' }),
+      note('Un film con più tag conta per ciascuno, quindi i totali possono superare il numero di film visti.')));
+
+    view.appendChild(section('Ore viste per tag', 'timer',
       el('p', { class: 'chart-lead' }, 'In totale ', el('strong', { text: ore(s.minTot) + ' ore' }), ' (' + fmtNum(Math.round(s.minTot)) + ' minuti)'),
-      hbars(s.luoghi.filter(l => l.n || !l.muted).map(l => ({
-        label: l.luogo, value: l.min, muted: l.muted,
-        text: ore(l.min) + ' h · ' + l.n + ' film',
-      })), { aria: 'Ore viste per luogo' }),
-      note('Un film visto in più luoghi conta per ciascuno.')));
+      hbars([...s.perTag, s.noTag].filter(t => t.n || !t.muted).map(t => ({
+        label: t.tag, value: t.min, muted: t.muted,
+        text: ore(t.min) + ' h · ' + t.n + ' film',
+      })), { aria: 'Ore viste per tag' }),
+      note('Un film con più tag conta per ciascuno.')));
   }
 
   // Watchlist

@@ -7,7 +7,7 @@
  * Passi:
  *   1. si caricano i CSV (o direttamente lo zip) dell'export di Letterboxd; tutto viene letto nel browser;
  *   2. per ogni film si cerca su TMDB titolo + anno; se il risultato è univoco ed esatto il film viene
- *      salvato subito (voto ×2, data dal diario, luoghi vuoti), altrimenti va «da rivedere»;
+ *      salvato subito (voto ×2, data dal diario, tag vuoti), altrimenti va «da rivedere»;
  *   3. nella revisione si sceglie il film giusto tra i candidati (o si cerca un altro titolo) oppure si salta.
  *
  * L'avanzamento è salvato nel browser dopo ogni film (localStorage, chiave filmshelf.import.letterboxd):
@@ -158,7 +158,7 @@ function renderUpload(ctx) {
       el('li', { html: 'Su <a href="https://letterboxd.com/settings/data/" target="_blank" rel="noopener">letterboxd.com → Settings → Data</a> premi <strong>Export your data</strong> e scarica lo zip.' }),
       el('li', { html: 'Qui sotto scegli lo <strong>zip</strong> così com’è, oppure i file <strong>watched.csv</strong>, <strong>ratings.csv</strong> e <strong>diary.csv</strong> (insieme).' }),
       el('li', { text: 'Controlla il riepilogo e avvia: i film trovati con certezza vengono salvati da soli, gli altri li scegli tu.' })),
-    el('p', { class: 'small', text: 'I voti Letterboxd (da ½ a 5 stelle) vengono moltiplicati per 2. La data di visione viene dal diario (la visione più recente); i luoghi restano vuoti. I file vengono letti solo nel browser.' }),
+    el('p', { class: 'small', text: 'I voti Letterboxd (da ½ a 5 stelle) vengono moltiplicati per 2. La data di visione viene dal diario (la visione più recente); i tag restano vuoti. I file vengono letti solo nel browser.' }),
     el('label', { class: 'btn btn-block lb-pick', for: 'lb-file' }, icon('upload'), 'Scegli i file'),
     input, msg, start));
 }

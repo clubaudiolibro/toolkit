@@ -55,7 +55,7 @@ export async function render(ctx) {
   async function toWatchlist() {
     const ok = await confirmDialog({
       title: 'Spostare in watchlist?',
-      text: 'Data di visione, voto e luoghi verranno tolti; le note restano.',
+      text: 'Data di visione, voto e tag verranno tolti; le note restano.',
       ok: 'Sposta in watchlist',
     });
     if (!ok) return;
@@ -86,7 +86,7 @@ export async function render(ctx) {
 
     el('dl', { class: 'card pad info-list' },
       isSeen ? info('Visto il', f.data_visione ? fmtDateLong(f.data_visione) : 'data non indicata') : null,
-      isSeen ? info('Dove', (f.luoghi || []).join(', ')) : null,
+      isSeen ? info('Tag', (f.luoghi || []).join(', ')) : null,
       info('Note', f.note ? el('span', { class: 'pre', text: f.note }) : null),
       info('Trama', f.trama),
       info('Generi', (f.generi || []).join(', ')),

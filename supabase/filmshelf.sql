@@ -8,14 +8,14 @@
 --
 -- Contiene:
 --   * filmshelf_film          una riga per film (visti e watchlist)
---   * filmshelf_impostazioni  la chiave TMDB (una riga per utente)
+--   * filmshelf_impostazioni  la chiave TMDB e l'elenco dei tag (una riga per utente)
 --   * sicurezza a livello di riga (RLS): ognuno vede solo le proprie righe
 --   * nessun accesso al ruolo "anon" (chi non ha fatto login)
 --
 -- La chiave TMDB NON è scritta qui: la inserisce l'app la prima volta,
 -- così non finisce mai nella repository pubblica.
 --
--- Versione dello schema: 1 (vedi filmshelf_schema_version e apps/filmshelf/js/config.js)
+-- Versione dello schema: 2 (vedi filmshelf_schema_version e apps/filmshelf/js/config.js)
 -- =====================================================================
 
 
@@ -39,7 +39,7 @@ create table if not exists public.filmshelf_film (
   data_visione      date,
   voto              numeric(3,1),
   note              text,
-  luoghi            text[] not null default '{}',
+  luoghi            text[] not null default '{}',   -- nell'app si chiamano «tag» (anche più di uno, liberi)
   creato_il         timestamptz not null default now(),
   aggiornato_il     timestamptz not null default now(),
 
@@ -48,20 +48,23 @@ create table if not exists public.filmshelf_film (
   constraint filmshelf_film_stato check (stato in ('visto', 'watchlist')),
   -- voto da 1 a 10 a passi di 0,5 (oppure vuoto)
   constraint filmshelf_film_voto check (voto is null or (voto between 1 and 10 and voto * 2 = trunc(voto * 2))),
-  -- luoghi ammessi (anche più di uno, oppure nessuno)
-  constraint filmshelf_film_luoghi check (luoghi <@ array['Cinema', 'The Space Pass', 'Casa']::text[]),
   constraint filmshelf_film_durata check (durata_min is null or durata_min >= 0),
   constraint filmshelf_film_anno check (anno is null or anno between 1870 and 2100)
 );
 
 create index if not exists filmshelf_film_user_idx on public.filmshelf_film (user_id, stato);
 
--- Impostazioni: per ora solo la chiave TMDB (leggibile solo dall'utente collegato)
+-- Impostazioni: chiave TMDB ed elenco dei tag (leggibili solo dall'utente collegato)
 create table if not exists public.filmshelf_impostazioni (
   user_id        uuid primary key default auth.uid() references auth.users (id) on delete cascade,
   tmdb_key       text,
   aggiornato_il  timestamptz not null default now()
 );
+
+-- Schema 2: i tag sono liberi (prima solo Cinema, The Space Pass, Casa) e l'elenco si salva qui.
+-- tag_elenco vuoto (null) = l'app usa i tre tag di partenza.
+alter table public.filmshelf_film drop constraint if exists filmshelf_film_luoghi;
+alter table public.filmshelf_impostazioni add column if not exists tag_elenco text[];
 
 -- aggiornato_il si aggiorna da solo a ogni modifica
 create or replace function public.filmshelf_touch()
@@ -113,7 +116,7 @@ create or replace function public.filmshelf_schema_version()
 returns integer
 language sql immutable
 set search_path = ''
-as $$ select 1 $$;
+as $$ select 2 $$;
 
 revoke all on function public.filmshelf_schema_version() from public, anon;
 grant execute on function public.filmshelf_schema_version() to authenticated;

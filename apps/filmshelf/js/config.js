@@ -3,11 +3,13 @@
  * APP_VERSION va tenuta uguale al campo version di "filmshelf" in assets/js/apps.js.
  * SCHEMA_VERSION deve corrispondere a filmshelf_schema_version() in supabase/filmshelf.sql.
  */
-export const APP_VERSION = '1.6';
-export const SCHEMA_VERSION = 1;
+export const APP_VERSION = '1.7';
+export const SCHEMA_VERSION = 2;
 
-/** Luoghi di visione ammessi (devono coincidere con il vincolo filmshelf_film_luoghi nello SQL). */
-export const LUOGHI = ['Cinema', 'The Space Pass', 'Casa'];
+/** Tag di partenza (finché non se ne crea uno nuovo); l'elenco vero sta nel database, vedi js/tags.js. */
+export const TAG_PREDEFINITI = ['Cinema', 'The Space Pass', 'Casa'];
+/** Lunghezza massima di un tag. */
+export const TAG_MAX = 30;
 
 /** TMDB: indirizzi dell'API e delle immagini, lingua. */
 export const TMDB = {
@@ -25,4 +27,5 @@ export const KEYS = {
   cache: 'filmshelf.cache',      // copia dei film per vederli anche senza rete
   view: 'filmshelf.view',        // ultima modalità di visualizzazione scelta
   sort: 'filmshelf.sort',        // ultimo ordinamento scelto
+  tags: 'filmshelf.tags',        // copia dell'elenco dei tag per l'uso senza rete
 };
