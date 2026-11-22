@@ -71,6 +71,16 @@ export async function updateFilm(id, data) {
   return replace(row);
 }
 
+/** Elimina definitivamente TUTTI i film (visti e watchlist). Irreversibile. Restituisce quanti erano. */
+export async function deleteAll() {
+  const n = films.length;
+  // Supabase vuole sempre un filtro: «id non nullo» = tutte le righe; la RLS limita comunque alle tue
+  await run(c => c.from(TABLE).delete().not('id', 'is', null), { action: "l'eliminazione" });
+  films = [];
+  saveCache();
+  return n;
+}
+
 /** Elimina definitivamente un film. */
 export async function deleteFilm(id) {
   await run(c => c.from(TABLE).delete().eq('id', id), { action: "l'eliminazione" });

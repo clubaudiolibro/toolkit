@@ -72,5 +72,32 @@ export async function render(ctx) {
     }
   }
 
+  // Elimina tutti i film (operazione irreversibile)
+  if (!store.isOffline()) {
+    view.appendChild(el('div', { class: 'card pad' },
+      el('h2', { class: 'card-title' }, icon('trash'), 'Elimina tutti i film'),
+      el('p', { text: 'Svuota l’archivio: vengono cancellati tutti i film, visti e in watchlist, con voti, date e note. Poi puoi importare un nuovo CSV da zero.' }),
+      el('button', {
+        type: 'button', class: 'btn btn-ghost-danger btn-block', disabled: !n,
+        on: { click: async () => {
+          const tot = store.all().length;
+          const ok = await confirmDialog({
+            title: 'Sei sicuro di voler eliminare tutto?',
+            text: 'Stai per eliminare definitivamente ' + tot + (tot === 1 ? ' film' : ' film') + ' (visti e watchlist), con voti, date, luoghi e note.\n\n'
+              + 'L’operazione è IRREVERSIBILE: non si può annullare e i dati non si possono recuperare. '
+              + 'Se non hai ancora una copia di sicurezza, annulla e usa prima «Esporta CSV».',
+            ok: 'Sì, elimina tutto', cancel: 'Annulla', danger: true,
+          });
+          if (!ok) return;
+          try {
+            const k = await store.deleteAll();
+            try { localStorage.removeItem('filmshelf.import.letterboxd'); } catch (e) { /* l'avanzamento di un vecchio import resta solo su questo dispositivo */ }
+            toast(k + (k === 1 ? ' film eliminato.' : ' film eliminati.'), 'ok');
+            ctx.rerender();
+          } catch (e) { /* l'avviso di errore l'ha già mostrato db.js: i film sono rimasti dove erano */ }
+        } },
+      }, icon('trash'), n ? 'Elimina tutti i film (' + n + ')' : 'Nessun film da eliminare')));
+  }
+
   view.appendChild(creditsCard());
 }
