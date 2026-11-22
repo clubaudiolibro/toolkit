@@ -7,6 +7,7 @@ import { APP_VERSION } from '../config.js';
 import * as store from '../store.js';
 import { keySetupCard } from './key.js';
 import { exportCsv } from '../export.js';
+import { parseFilmCsv } from '../import-csv.js';
 
 /** Logo TMDB approvato (versione «blue short» dalla pagina ufficiale dei loghi TMDB). */
 const TMDB_LOGO = 'https://www.themoviedb.org/assets/2/v4/logos/v2/blue_short-8e7b30f73a4020692ccca9c88bafe5dcb6f8a62a4c6bc55cd9ba82bb2cd95f6c.svg';
@@ -19,6 +20,48 @@ export function creditsCard() {
     el('p', { text: 'This product uses the TMDB API but is not endorsed or certified by TMDB.' }),
     el('p', { class: 'small', text: 'Titoli, trame, generi, durate e locandine provengono da The Movie Database (TMDB). Le locandine non vengono salvate: si caricano da TMDB ogni volta che servono.' }),
     el('p', { class: 'small', text: 'FilmShelf ' + APP_VERSION + ' · parte della Toolbox.' }));
+}
+
+/** Legge il file scelto, mostra il riepilogo, chiede conferma e importa. */
+async function importFromFile(input, ctx) {
+  const file = input.files && input.files[0];
+  input.value = '';                       // permette di scegliere di nuovo lo stesso file
+  if (!file) return;
+  let text;
+  try { text = await file.text(); } catch (e) { toast('Non riesco a leggere il file.', 'error'); return; }
+
+  const have = new Set(store.all().map(f => f.tmdb_id));
+  const res = parseFilmCsv(text, have);
+  if (res.error) { toast(res.error, 'error'); return; }
+
+  const n = res.rows.length;
+  const visti = res.rows.filter(f => f.stato === 'visto').length;
+  const lines = [];
+  lines.push('Nel file ci sono ' + res.total + ' film.');
+  if (n) lines.push('Da importare: ' + n + ' (' + visti + ' visti, ' + (n - visti) + ' in watchlist).');
+  else lines.push('Non c’è niente da importare.');
+  if (res.already) lines.push('Già nell’archivio, lasciati come sono: ' + res.already + '.');
+  if (res.skipped.length) {
+    lines.push('Non importabili: ' + res.skipped.length + '.');
+    const shown = res.skipped.slice(0, 8).map(s => '• ' + s.titolo + ' (' + s.motivo + ')');
+    if (res.skipped.length > shown.length) shown.push('… e altri ' + (res.skipped.length - shown.length) + '.');
+    lines.push(shown.join('\n'));
+  }
+  const ok = await confirmDialog({
+    title: n ? 'Importare ' + n + ' film?' : 'Importazione da CSV',
+    text: lines.join('\n\n'),
+    ok: n ? 'Importa' : 'Chiudi', cancel: n ? 'Annulla' : 'Fine',
+  });
+  if (!ok || !n) return;
+
+  try {
+    const k = await store.addMany(res.rows, (d, t) => toast('Importazione in corso: ' + d + ' di ' + t + '…'));
+    toast(k + (k === 1 ? ' film importato.' : ' film importati.'), 'ok');
+  } catch (e) {
+    // l'avviso l'ha già mostrato db.js; ripetere l'import è sicuro (i film già salvati si saltano)
+    toast('Importazione interrotta. Puoi ripetere: i film già salvati vengono saltati.', 'error');
+  }
+  ctx.rerender();
 }
 
 export async function render(ctx) {
@@ -34,6 +77,16 @@ export async function render(ctx) {
       type: 'button', class: 'btn btn-primary btn-block', disabled: !n,
       on: { click: () => { const k = exportCsv(); toast(k + (k === 1 ? ' film esportato.' : ' film esportati.'), 'ok'); } },
     }, icon('backup'), n ? 'Esporta CSV (' + n + ' film)' : 'Nessun film da esportare')));
+
+  // Importa da CSV di FilmShelf (ripristino da copia di sicurezza)
+  if (!store.isOffline()) {
+    const input = el('input', { type: 'file', accept: '.csv,text/csv', hidden: true, on: { change: () => importFromFile(input, ctx) } });
+    view.appendChild(el('div', { class: 'card pad' },
+      el('h2', { class: 'card-title' }, icon('upload'), 'Importa da CSV'),
+      el('p', { text: 'Carica un file nel formato di «Esporta CSV» per ripristinare i film. Quelli già presenti nell’archivio non vengono toccati né duplicati.' }),
+      el('button', { type: 'button', class: 'btn btn-block', on: { click: () => input.click() } }, icon('upload'), 'Scegli il file CSV'),
+      input));
+  }
 
   // import Letterboxd (sezione rimovibile)
   if (!store.isOffline()) {
