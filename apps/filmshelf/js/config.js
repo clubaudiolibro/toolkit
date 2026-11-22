@@ -3,7 +3,7 @@
  * APP_VERSION va tenuta uguale al campo version di "filmshelf" in assets/js/apps.js.
  * SCHEMA_VERSION deve corrispondere a filmshelf_schema_version() in supabase/filmshelf.sql.
  */
-export const APP_VERSION = '1.4';
+export const APP_VERSION = '1.5';
 export const SCHEMA_VERSION = 1;
 
 /** Luoghi di visione ammessi (devono coincidere con il vincolo filmshelf_film_luoghi nello SQL). */

@@ -65,6 +65,24 @@ export async function addFilm(data) {
   return replace(row);
 }
 
+/**
+ * Aggiunge molti film insieme (import da CSV), a gruppi da 200. rows = oggetti con i campi di FIELDS
+ * (più, facoltativo, creato_il). onProgress(fatti, totale) dopo ogni gruppo. Restituisce quanti ne ha salvati.
+ * Se un gruppo fallisce lancia l'errore: quelli dei gruppi precedenti sono già salvati e restano in memoria.
+ */
+export async function addMany(rows, onProgress) {
+  const size = 200;
+  let done = 0;
+  for (let i = 0; i < rows.length; i += size) {
+    const chunk = rows.slice(i, i + size).map(d => ({ ...pick(d), ...(d.creato_il ? { creato_il: d.creato_il } : {}) }));
+    const saved = await run(c => c.from(TABLE).insert(chunk).select(), { action: "l'importazione" });
+    for (const row of saved) replace(row);
+    done += saved.length;
+    if (onProgress) onProgress(done, rows.length);
+  }
+  return done;
+}
+
 /** Modifica un film. Restituisce la riga aggiornata. */
 export async function updateFilm(id, data) {
   const row = await run(c => c.from(TABLE).update(pick(data)).eq('id', id).select().single(), { action: 'il salvataggio' });
