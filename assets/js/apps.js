@@ -80,7 +80,7 @@ const APPS = [
     description: "I film che ho visto e la watchlist: ricerca su TMDB, voti, luoghi e statistiche.",
     url: "./apps/filmshelf/index.html",
     category: "film",
-    version: "1.3",
+    version: "1.4",
     tags: ["TMDB", "Telefono", "Cloud"],
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="11" rx="1.5"/><path d="M3 9l16.5-4M7 8l2-3.6M12 6.8l2-3.6M16.6 5.7l1.5-3.2"/></svg>'
   }
@@ -93,6 +93,7 @@ const APPS = [
           version, text (descrizione brevissima).
    ===================================================================== */
 const CHANGELOG = [
+  { date: "2026-11-22", app: "filmshelf", version: "1.4", text: "Altro → «Elimina tutti i film»: svuota l'archivio (visti e watchlist) dopo un avviso che l'operazione è irreversibile, per poter reimportare un CSV da zero." },
   { date: "2026-11-22", app: "filmshelf", version: "1.3", text: "Voto sulle locandine della griglia più grande e ben visibile: box viola con numero bianco in basso a destra." },
   { date: "2026-11-22", app: "toolbox", version: "3.0", text: "Nuova identità visiva «Ciottolo» per home e strumenti: font Atkinson Hyperlegible Next, superfici morbide senza bordi, colore della categoria come velatura, barra in basso sospesa. Regole per i nuovi strumenti in docs/IDENTITA-VISIVA.md." },
   { date: "2026-11-22", app: "audiolibri", version: "1.3", text: "Veste grafica «Ciottolo»." },
