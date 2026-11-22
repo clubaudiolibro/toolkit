@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Citazioni in Immagine</title>
-<meta name="theme-color" content="#f7f7f5">
+<meta name="theme-color" content="#eef1f4">
 <!-- Dashboard Audiolibri: PWA, icone e navigazione comune (percorsi relativi) -->
 <script src="../../assets/js/toolbox-guard.js"></script>
 <link rel="manifest" href="../../manifest.webmanifest">
@@ -110,20 +110,38 @@
   .empty-state svg { width: 40px; height: 40px; color: var(--accent); }
   .hidden { display: none !important; }
 
-  /* ---------- Stile comune della Toolbox («Strumento») ---------- */
-  h1 { font-size: 22px; font-weight: 600; letter-spacing: -.025em; }
+  /* ---------- Stile comune della Toolbox («Ciottolo»): superfici morbide, angoli ampi, colore come velatura.
+     Regole complete in docs/IDENTITA-VISIVA.md ---------- */
+  :root { --field: var(--tk-surface); }
+  body { font-size: 15px; }
+  h1 { font-size: 28px; font-weight: 800; letter-spacing: 0; }
   header.top { align-items: center; }
   header.top .home-link { margin-bottom: 10px; }
-  .panel, .stage, .empty-state { border-radius: var(--tk-radius-lg); }
-  details.sec > summary { font: 500 11px/1.3 var(--font-mono); letter-spacing: .07em; }
-  label.f { font-weight: 600; }
-  label.f .v, .bar .grow, .kbd, .msg { font-family: var(--font-mono); font-size: 11.5px; }
-  select, input[type="text"], input[type="search"], input[type="number"], textarea, input[type="color"], .seg, .list, .btn { border-radius: var(--tk-radius); }
-  .btn { font-weight: 600; }
-  .btn.primary { background: var(--tk-accent-fill); border-color: var(--tk-accent-fill); }
-  .seg button.on { background: var(--tk-accent-fill); }
-  .chip { border-radius: var(--tk-radius); }
-  .item .tag { font-family: var(--font-mono); font-weight: 500; border-radius: var(--tk-radius-sm); }
+  .panel { border: 0; border-radius: var(--tk-radius-lg); }
+  .stage, .empty-state { border-radius: var(--tk-radius-lg); }
+  .controls { padding: 12px; }
+  details.sec { border-bottom: 1px solid var(--line); padding: 4px 8px 14px; }
+  details.sec > summary { font: 700 15px/1.3 var(--font-ui); letter-spacing: 0; text-transform: none; color: var(--ink); min-height: 44px; padding: 0; }
+  label.f { font-weight: 700; }
+  label.f .v, .bar .grow, .kbd, .msg { font-family: var(--font-ui); font-size: 13px; }
+  select, input[type="text"], input[type="search"], input[type="number"], textarea, input[type="color"] {
+    border: 1.5px solid var(--tk-line-strong); border-radius: var(--tk-radius-field); background: var(--tk-surface); min-height: 40px; padding: 7px 12px; }
+  textarea { min-height: 90px; }
+  input[type="color"] { padding: 3px; height: 40px; }
+  select:focus-visible, input:focus-visible, textarea:focus-visible { outline: none; border-color: var(--tk-accent-fill); box-shadow: 0 0 0 4px var(--tk-accent-soft); }
+  .seg { border: 0; border-radius: 999px; padding: 4px; gap: 2px; background: var(--tk-surface-2); box-shadow: inset 0 0 0 1px var(--line); }
+  .seg button { border-right: 0; border-radius: 999px; background: transparent; min-height: 36px; font-weight: 700; }
+  .seg button.on { background: var(--tk-surface); color: var(--ink); box-shadow: 0 1px 3px rgba(28,36,48,.18); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 16px; border: 0; border-radius: var(--tk-radius); background: var(--tk-surface-2); box-shadow: inset 0 0 0 1.5px var(--line); font-weight: 700; }
+  .btn.primary { background: var(--tk-accent-fill); color: var(--tk-on-accent); box-shadow: none; }
+  .btn.sm { min-height: 34px; padding: 0 12px; border-radius: 12px; }
+  .chip { border: 0; border-radius: 999px; background: var(--tk-surface-2); box-shadow: inset 0 0 0 1.5px var(--line); font-weight: 700; min-height: 34px; }
+  .list { border: 0; border-radius: 20px; background: var(--tk-surface-2); }
+  .item.active { background: var(--tk-accent-soft); }
+  .item .tag { font-family: var(--font-ui); font-weight: 700; border: 0; background: var(--tk-surface); border-radius: 999px; padding: 1px 8px; }
+  .stage canvas { border-radius: 8px; }
+  .cover-box .ph { border-radius: 10px; }
+  .empty-state { border: 2px dashed var(--tk-line-strong); }
 </style>
 </head>
 <body>

@@ -1,22 +1,22 @@
-/* Toolbox — link "torna alla Home" condiviso dagli applicativi (stile in toolkit.css).
-   Usa le variabili CSS già definite da ciascun applicativo, con fallback reciproci. */
+/* Toolbox — link "torna alla Toolbox" condiviso dagli applicativi (stile «Ciottolo»: pillola sulla superficie).
+   Markup: <a class="home-link" href="../../index.html"><svg…/><span class="home-label">Toolbox</span></a> */
 .home-link{
-  display:inline-flex;align-items:center;gap:6px;flex:none;
-  padding:6px 11px 6px 8px;border-radius:var(--tk-radius, 8px);
-  border:1px solid var(--tk-line, var(--border, var(--line, #e3dfd6)));
-  background:transparent;color:var(--tk-muted, var(--muted, #5d6470));
-  font:500 11px/1.2 var(--tk-mono, ui-monospace, Menlo, Consolas, monospace);letter-spacing:.06em;text-transform:uppercase;
+  display:inline-flex;align-items:center;gap:6px;flex:none;box-sizing:border-box;
+  height:44px;padding:0 16px 0 10px;border-radius:999px;border:0;
+  background:var(--tk-surface);color:var(--tk-text);
+  font:700 15px/1 var(--tk-font);letter-spacing:0;text-transform:none;
   text-decoration:none;white-space:nowrap;
-  transition:color .15s,border-color .15s,background .15s;
+  transition:background .15s,color .15s;
 }
-.home-link:hover{color:var(--tk-text, var(--text, #1f2328));border-color:var(--tk-line-strong, var(--accent, #2f6f62))}
-.home-link:focus-visible{outline:2px solid var(--tk-accent, var(--accent, #2f6f62));outline-offset:2px}
-.home-link svg{width:15px;height:15px;flex:none}
-/* Diario: sugli schermi piccoli resta solo l'icona */
+.home-link:hover{background:var(--tk-accent-soft);color:var(--tk-accent-text)}
+.home-link:focus-visible{outline:3px solid var(--tk-accent-fill);outline-offset:2px}
+.home-link svg{width:20px;height:20px;flex:none}
+/* Diario: sugli schermi piccoli resta solo l'icona, in un cerchio */
 @media (max-width:640px){
-  .app-header .home-link{padding:6px;width:34px;height:34px;justify-content:center}
+  .app-header .home-link{padding:0;width:44px;height:44px;justify-content:center}
   .app-header .home-link .home-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
 }
-/* Citazioni: il link sta sopra il titolo */
+/* Citazioni e Postcard: il link sta sopra il titolo */
 header.top .home-link{margin-bottom:8px}
 @media print{.home-link{display:none!important}}
+@media (prefers-reduced-motion:reduce){.home-link{transition:none}}
