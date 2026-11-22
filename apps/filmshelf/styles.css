@@ -575,7 +575,14 @@ body { font-size: 17px; padding-bottom: calc(var(--nav-h) + 16px + var(--safe-b)
 .poster-xs { border-radius: 6px; }
 .grid-poster .poster { border-radius: 16px; box-shadow: none; }
 .poster-lg { border-radius: 20px; box-shadow: none; }
-.grid-voto { right: 6px; bottom: 6px; min-width: 28px; text-align: center; padding: .2em .55em; border-radius: 999px; font-family: var(--font); font-weight: 800; }
+/* Voto sulla locandina: box pieno nel colore della categoria (viola), ben leggibile anche su copertine chiare.
+   Eccezione voluta alla regola «velatura»: il voto è il dato principale del film e sta sopra un'immagine. */
+.grid-voto {
+  right: 6px; bottom: 6px; min-width: 38px; text-align: center; padding: .22em .6em; border-radius: 12px;
+  font-family: var(--font); font-weight: 800; font-size: 1.1rem; line-height: 1.2;
+  background: var(--accent-fill); color: var(--on-accent);
+  box-shadow: 0 0 0 2px var(--surface);
+}
 .grid-title { font-size: .9rem; font-weight: 700; }
 .grid-year { font-family: var(--font); font-size: .8rem; color: var(--muted); }
 .film-card { border: 0; border-radius: var(--radius); box-shadow: none; }
