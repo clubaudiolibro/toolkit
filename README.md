@@ -35,6 +35,27 @@ Tutti i percorsi sono relativi: il sito funziona sia nella root del dominio sia 
 - Diario: l'ultimo CSV caricato viene ricordato in questo browser (opzione «Memorizza il CSV in questo browser», attiva di default, disattivabile dalle Impostazioni del Diario). Un nuovo CSV sostituisce il precedente.
 - Citazioni: ricorda impostazioni, template e copertine; le citazioni si caricano a ogni sessione.
 
+## Backup e ripristino globale
+Nella home, sezione «Backup e ripristino»: **Esporta tutto** crea un unico file `toolbox-backup-AAAA-MM-GG.zip`, **Ripristina…** lo rilegge.
+
+Contenuto dello zip (si sceglie quali strumenti includere):
+```
+manifest.json         indice (data, versione, un elemento per strumento)
+LEGGIMI.txt
+gymlog/gymlog.json    stesso formato del backup di GymLog (usabile anche da «Altro → Backup»)
+filmshelf/filmshelf.json   film e tag (la chiave TMDB NON è inclusa)
+tabshelf/             tabshelf.json + documenti/ + miniature/ (il cestino non è incluso)
+audiolibri/, citazioni/, postcard-audiolibri/   impostazioni e template salvati nel browser (+ copertine)
+```
+Come si comporta il ripristino:
+- **GymLog**: sostituisce tutto, in un'unica operazione (se si interrompe non cambia niente).
+- **FilmShelf** e **TabShelf**: *integrano*, non cancellano e non modificano nulla di ciò che c'è già (film con lo stesso id o id TMDB, categorie/tag con lo stesso nome, tablature con lo stesso id vengono riusati). TabShelf controlla prima lo spazio disponibile (1 GB), carica i file e solo dopo registra la scheda; se qualcosa va storto toglie i file appena caricati. Se si interrompe basta ripetere lo stesso ripristino: riparte dalle tablature che mancano. Ciò che è nel cestino non viene ripristinato.
+- **Diario, Citazioni, Postcard**: sostituiscono le impostazioni di *questo browser* (il CSV del Diario non è incluso: arriva ogni notte da Notion).
+- Prima di sostituire qualcosa (GymLog, impostazioni) la home scarica una copia di sicurezza `toolbox-prima-del-ripristino-AAAA-MM-GG.zip`; senza quella il ripristino non parte.
+- Da PC (Chrome/Edge) lo zip viene scritto direttamente su disco; da telefono TabShelf è proposto disattivato perché i file occupano memoria.
+
+Codice: `assets/js/backup/` (`core.js`, `util.js`, `home-backup.js`, un adattatore per strumento in `adapters/`), stile in `assets/css/backup.css`. Gli adattatori non importano codice delle app (solo le loro costanti `config.js`): **se si aggiunge una tabella a GymLog o FilmShelf va aggiunta anche nel loro adattatore**. Per includere un nuovo strumento: crea un adattatore (modello: `adapters/gymlog.js`) con lo stesso `id` di `apps.js` e aggiungilo a `adapters/index.js`.
+
 ## Versioni e registro delle versioni
 - Ogni strumento ha una versione (campo `version` in `assets/js/apps.js`), mostrata sulla sua card nella homepage.
 - **Regola: ogni aggiornamento di uno strumento deve incrementare la sua versione** (`1.0` → `1.1` per
@@ -176,7 +197,7 @@ FILE-MANCANTI.txt     (solo se qualche file non è stato scaricato)
   Titolo, Artista, Tag (`Categoria: tag` separati da ` | `), Stato, Voto, Note, Nome file originale, Tipo,
   Dimensione (KB), Data di caricamento, File nel backup, ID.
 
-Il **ripristino da backup non è ancora disponibile**: il formato qui sopra è pensato per permetterlo in futuro.
+Il **ripristino dal backup .zip di TabShelf** (quello di Impostazioni → «Crea backup») non è disponibile nell'app; il ripristino di TabShelf si fa dal backup globale della home (vedi «Backup e ripristino globale»), che ha un formato proprio.
 
 ### Limiti del piano gratuito di Supabase
 

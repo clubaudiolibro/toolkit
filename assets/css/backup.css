@@ -1,0 +1,82 @@
+/* TOOLBOX — sezione «Backup e ripristino» della home e finestra (stile «Ciottolo»).
+   Solo variabili --tk-* e componenti .tk-* di toolkit.css; qui ci sono solo le classi specifiche del backup. */
+
+/* ---------- Sezione nella home ---------- */
+.backup-block{padding-bottom:48px}
+.backup-card{
+  display:flex;flex-wrap:wrap;align-items:center;gap:16px 20px;
+  background:var(--tk-surface);border-radius:var(--tk-radius-lg);padding:20px 24px;
+}
+.backup-card .tk-icon-disc{width:48px;height:48px;background:var(--tk-surface-2);color:var(--tk-text)}
+.backup-text{flex:1 1 180px;min-width:0}
+.backup-text h2{margin:0 0 2px;font:800 1.2rem/1.2 var(--tk-font)}
+.backup-text p{margin:0;font:400 .95rem/1.45 var(--tk-font);color:var(--tk-muted)}
+.backup-text .backup-last{margin-top:4px;font-variant-numeric:tabular-nums}
+.backup-text .backup-last.is-warn{color:var(--tk-warn);font-weight:700}
+.backup-actions{display:flex;flex-wrap:wrap;gap:10px}
+@media (max-width:640px){
+  .backup-card{padding:16px}
+  .backup-actions{width:100%}
+  .backup-actions .tk-btn{flex:1 1 0}
+  .backup-block{padding-bottom:32px}
+}
+
+/* ---------- Finestra ---------- */
+.bk-dialog{
+  width:min(560px,calc(100% - 24px));max-height:calc(100dvh - 32px);padding:0;margin:auto;
+  border:0;border-radius:28px;background:var(--tk-surface);color:var(--tk-text);
+  box-shadow:var(--tk-shadow-lg);overflow:hidden;
+}
+.bk-dialog[open]{display:flex;flex-direction:column}
+.bk-dialog::backdrop{background:var(--tk-overlay)}
+.bk-head{display:flex;align-items:center;gap:12px;padding:20px 20px 8px 24px}
+.bk-head h2{flex:1;margin:0;font:800 1.4rem/1.2 var(--tk-font)}
+.bk-close[hidden]{display:none}
+.bk-body{flex:1;min-height:0;overflow-y:auto;padding:8px 24px 16px;display:flex;flex-direction:column;gap:14px;-webkit-overflow-scrolling:touch}
+.bk-foot{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;padding:12px 24px calc(20px + env(safe-area-inset-bottom,0px))}
+.bk-foot:empty{display:none}
+@media (max-width:480px){
+  .bk-foot .tk-btn{flex:1 1 0}
+  .bk-head{padding:16px 12px 4px 20px}
+  .bk-body{padding:8px 20px 12px}
+  .bk-foot{padding:12px 20px calc(16px + env(safe-area-inset-bottom,0px))}
+}
+
+.bk-lead{margin:0;font:400 1rem/1.5 var(--tk-font)}
+.bk-hint{margin:0;font:400 .88rem/1.5 var(--tk-font);color:var(--tk-muted)}
+.bk-status{margin:0;font:400 .95rem/1.5 var(--tk-font);color:var(--tk-muted)}
+.bk-error{margin:0;font:700 .95rem/1.5 var(--tk-font);color:var(--tk-danger)}
+.bk-callout{margin:0;padding:12px 16px;border-radius:var(--tk-radius);font:400 .92rem/1.5 var(--tk-font);background:var(--tk-surface-2)}
+.bk-callout.is-warn{background:var(--tk-warn-soft);color:var(--tk-text)}
+
+/* Elenco con caselle */
+.bk-list,.bk-results{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.bk-row,.bk-result{
+  display:flex;align-items:flex-start;gap:14px;padding:12px 16px;min-height:64px;
+  border-radius:20px;background:var(--tk-surface-2);cursor:pointer;
+}
+.bk-row.is-off{cursor:default;opacity:.75}
+.bk-result{cursor:default}
+.bk-check{flex:none;width:24px;height:24px;margin:2px 0 0;accent-color:var(--tk-text);cursor:pointer}
+.bk-check:disabled{cursor:default}
+.bk-check:focus-visible{outline:3px solid var(--tk-text);outline-offset:2px}
+.bk-row-main{display:flex;flex-direction:column;gap:2px;min-width:0}
+.bk-row-title{font:700 1rem/1.3 var(--tk-font)}
+.bk-row-sub{font:400 .9rem/1.4 var(--tk-font);color:var(--tk-muted);overflow-wrap:anywhere}
+.bk-row-note{margin-top:2px;font:400 .85rem/1.4 var(--tk-font);color:var(--tk-muted)}
+.bk-row-note.is-warn{color:var(--tk-warn);font-weight:700}
+.bk-ico{display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:var(--tk-radius-pill)}
+.bk-ico svg{width:18px;height:18px}
+.bk-result.is-ok .bk-ico{background:var(--tk-ok-soft);color:var(--tk-ok)}
+.bk-result.is-bad .bk-ico{background:var(--tk-danger-soft);color:var(--tk-danger)}
+
+.bk-steps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.bk-steps li{padding:12px 16px;border-radius:var(--tk-radius);background:var(--tk-surface-2);font:400 .95rem/1.5 var(--tk-font)}
+
+/* Avanzamento */
+.bk-bar{height:12px;border-radius:var(--tk-radius-pill);background:var(--tk-surface-2);box-shadow:inset 0 0 0 1px var(--tk-line);overflow:hidden}
+.bk-bar-fill{display:block;height:100%;width:0;border-radius:var(--tk-radius-pill);background:var(--tk-text);transition:width .2s}
+.bk-barline{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.bk-pct{font:700 .95rem/1 var(--tk-font);font-variant-numeric:tabular-nums}
+
+@media (prefers-reduced-motion:reduce){.bk-bar-fill{transition:none}}

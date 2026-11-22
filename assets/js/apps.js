@@ -93,6 +93,7 @@ const APPS = [
           version, text (descrizione brevissima).
    ===================================================================== */
 const CHANGELOG = [
+  { date: "2026-11-22", app: "toolbox", version: "3.1", text: "Nuova sezione «Backup e ripristino» in home: «Esporta tutto» crea un unico file .zip con i dati di GymLog, FilmShelf, TabShelf (file delle tablature compresi) e le impostazioni di Diario, Citazioni e Postcard; «Ripristina…» lo rilegge scegliendo cosa recuperare, con controlli preliminari (spazio incluso) e copia di sicurezza di ciò che verrebbe sostituito. FilmShelf e TabShelf vengono solo integrati: niente viene cancellato." },
   { date: "2026-11-22", app: "filmshelf", version: "1.7", text: "«Dove» diventa «Tag»: nel modulo Visto il «+» crea nuovi tag; nuova sezione Statistiche «Film visti per tag»; in Visti il pulsante «Tag» filtra per uno o più tag. Richiede di rieseguire supabase/filmshelf.sql (schema 2)." },
   { date: "2026-11-22", app: "filmshelf", version: "1.6", text: "Altro → «Importa» unico: si sceglie tra «Importa da Letterboxd» (procedura invariata) e «Importa da CSV»." },
   { date: "2026-11-22", app: "filmshelf", version: "1.5", text: "Altro → «Importa da CSV»: ripristina i film da un file nel formato di «Esporta CSV», con riepilogo prima di importare; i film già presenti non vengono toccati e quelli senza id TMDB vengono segnalati." },

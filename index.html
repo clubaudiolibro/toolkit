@@ -17,11 +17,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="assets/css/toolkit.css">
 <link rel="stylesheet" href="assets/css/home.css">
+<link rel="stylesheet" href="assets/css/backup.css">
 <script src="assets/js/toolbox-config.js" defer></script>
 <script src="assets/js/toolbox-auth.js" defer></script>
 <script src="assets/js/apps.js" defer></script>
 <script src="assets/js/home.js" defer></script>
 <script src="assets/js/home-login.js" defer></script>
+<script type="module" src="assets/js/backup/home-backup.js"></script>
 </head>
 <body class="locked">
 <script>try{var s=JSON.parse(localStorage.getItem("tabshelf.auth")||"null");if(s&&(s.access_token||s.refresh_token))document.body.classList.remove("locked")}catch(e){}</script>
@@ -75,6 +77,23 @@
       <div class="filters" id="filters" role="toolbar" aria-label="Filtra per categoria"></div>
       <nav class="app-grid" id="app-grid" aria-label="Applicativi disponibili"></nav>
       <noscript><p>Per usare Toolbox Alessandro è necessario attivare JavaScript.</p></noscript>
+    </section>
+    <section class="block backup-block" aria-labelledby="backup-title">
+      <div class="backup-card">
+        <span class="tk-icon-disc" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        </span>
+        <div class="backup-text">
+          <h2 id="backup-title">Backup e ripristino</h2>
+          <p>Un solo file con i dati di tutti gli strumenti.</p>
+          <p id="backup-last" class="backup-last"></p>
+        </div>
+        <div class="backup-actions">
+          <button class="tk-btn tk-btn--primary" id="btn-backup-export" type="button">Esporta tutto</button>
+          <button class="tk-btn" id="btn-backup-restore" type="button">Ripristina…</button>
+        </div>
+        <input type="file" id="backup-file" accept=".zip,application/zip" hidden>
+      </div>
     </section>
   </div>
 </main>
