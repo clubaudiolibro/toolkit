@@ -80,7 +80,7 @@ const APPS = [
     description: "I film che ho visto e la watchlist: ricerca su TMDB, voti, luoghi e statistiche.",
     url: "./apps/filmshelf/index.html",
     category: "film",
-    version: "1.7",
+    version: "1.8",
     tags: ["TMDB", "Telefono", "Cloud"],
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="11" rx="1.5"/><path d="M3 9l16.5-4M7 8l2-3.6M12 6.8l2-3.6M16.6 5.7l1.5-3.2"/></svg>'
   }
@@ -93,6 +93,7 @@ const APPS = [
           version, text (descrizione brevissima).
    ===================================================================== */
 const CHANGELOG = [
+  { date: "2026-11-24", app: "filmshelf", version: "1.8", text: "Filtro «Tag» in Visti: premendo «Applica» senza scegliere alcun tag si vedono i film senza tag («Azzera» toglie il filtro)." },
   { date: "2026-11-22", app: "toolbox", version: "3.1", text: "Nuova sezione «Backup e ripristino» in home: «Esporta tutto» crea un unico file .zip con i dati di GymLog, FilmShelf, TabShelf (file delle tablature compresi) e le impostazioni di Diario, Citazioni e Postcard; «Ripristina…» lo rilegge scegliendo cosa recuperare, con controlli preliminari (spazio incluso) e copia di sicurezza di ciò che verrebbe sostituito. FilmShelf e TabShelf vengono solo integrati: niente viene cancellato." },
   { date: "2026-11-22", app: "filmshelf", version: "1.7", text: "«Dove» diventa «Tag»: nel modulo Visto il «+» crea nuovi tag; nuova sezione Statistiche «Film visti per tag»; in Visti il pulsante «Tag» filtra per uno o più tag. Richiede di rieseguire supabase/filmshelf.sql (schema 2)." },
   { date: "2026-11-22", app: "filmshelf", version: "1.6", text: "Altro → «Importa» unico: si sceglie tra «Importa da Letterboxd» (procedura invariata) e «Importa da CSV»." },
