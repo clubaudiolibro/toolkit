@@ -41,8 +41,8 @@ const SORTS = {
 
 /* Stato che resta finché la pagina è aperta: testo cercato e posizione di scorrimento. */
 const memory = {
-  visto: { q: '', y: 0, tags: [], all: false },      // tags: tag scelti per il filtro; all: true = servono tutti
-  watchlist: { q: '', y: 0, tags: [], all: false },
+  visto: { q: '', y: 0, tags: [], all: false, none: false },      // tags: tag scelti per il filtro; all: true = servono tutti; none: true = solo film senza tag
+  watchlist: { q: '', y: 0, tags: [], all: false, none: false },
 };
 
 function getMode() {
@@ -83,16 +83,18 @@ export function searchFilms(films, q) {
   });
 }
 
-/** Filtra per tag: con all = false basta uno dei tag scelti, con all = true servono tutti. */
-export function filterByTags(films, chosen, all = false) {
-  if (!chosen.length) return films;
+/** Filtra per tag: con all = false basta uno dei tag scelti, con all = true servono tutti.
+ *  Con none = true (e nessun tag scelto) restano solo i film senza alcun tag. */
+export function filterByTags(films, chosen, all = false, none = false) {
+  if (!chosen.length) return none ? films.filter(f => !(f.luoghi || []).length) : films;
   return films.filter(f => {
     const t = f.luoghi || [];
     return all ? chosen.every(c => t.includes(c)) : chosen.some(c => t.includes(c));
   });
 }
 
-/** Foglio per scegliere i tag del filtro. Restituisce { tags, all } oppure null se annullato. */
+/** Foglio per scegliere i tag del filtro. Restituisce { tags, all, none } oppure null se annullato.
+ *  «Applica» senza alcun tag scelto = mostra i film senza tag (none); «Azzera» = nessun filtro. */
 function tagFilterSheet(current, currentAll) {
   return customSheet((sheet, close) => {
     const chosen = new Set(current);
@@ -109,7 +111,8 @@ function tagFilterSheet(current, currentAll) {
     const hint = el('p', { class: 'small muted-text' });
     function updateHint() {
       const n = chosen.size;
-      hint.textContent = n < 2 ? '' : (all ? 'Mostro i film che hanno tutti i tag scelti.' : 'Mostro i film che hanno almeno uno dei tag scelti.');
+      hint.textContent = n === 0 ? 'Senza tag scelti, «Applica» mostra i film senza tag.'
+        : n < 2 ? '' : (all ? 'Mostro i film che hanno tutti i tag scelti.' : 'Mostro i film che hanno almeno uno dei tag scelti.');
     }
     updateHint();
     sheet.append(
@@ -125,8 +128,11 @@ function tagFilterSheet(current, currentAll) {
           el('div', { class: 'chips' }, modeBtns),
           hint)),
       el('div', { class: 'sheet-actions' },
-        el('button', { type: 'button', class: 'btn', text: 'Azzera', on: { click: () => close({ tags: [], all: false }) } }),
-        el('button', { type: 'button', class: 'btn btn-primary', text: 'Applica', on: { click: () => close({ tags: list.filter(t => chosen.has(t)), all }) } })));
+        el('button', { type: 'button', class: 'btn', text: 'Azzera', on: { click: () => close({ tags: [], all: false, none: false }) } }),
+        el('button', { type: 'button', class: 'btn btn-primary', text: 'Applica', on: { click: () => {
+          const picked = list.filter(t => chosen.has(t));
+          close({ tags: picked, all, none: picked.length === 0 });
+        } } })));
   }).then(v => v || null);
 }
 
@@ -241,7 +247,7 @@ export async function render(ctx) {
     type: 'button', class: 'btn btn-sm filter-btn', on: { click: async () => {
       const r = await tagFilterSheet(mem.tags.filter(t => tags.all().includes(t)), mem.all);
       if (!r) return;
-      mem.tags = r.tags; mem.all = r.all; draw();
+      mem.tags = r.tags; mem.all = r.all; mem.none = r.none; draw();
     } },
   }) : null;
   const activeTags = el('div', { class: 'chips small active-tags' });
@@ -254,10 +260,14 @@ export async function render(ctx) {
     filterBtn.appendChild(icon('tag'));
     filterBtn.appendChild(document.createTextNode('Tag'));
     if (mem.tags.length) filterBtn.appendChild(el('span', { class: 'filter-badge', text: String(mem.tags.length) }));
-    filterBtn.setAttribute('aria-label', mem.tags.length ? 'Filtra per tag (' + mem.tags.length + ' scelti)' : 'Filtra per tag');
-    filterBtn.classList.toggle('active', mem.tags.length > 0);
+    filterBtn.setAttribute('aria-label', mem.tags.length ? 'Filtra per tag (' + mem.tags.length + ' scelti)' : (mem.none ? 'Filtra per tag (film senza tag)' : 'Filtra per tag'));
+    filterBtn.classList.toggle('active', mem.tags.length > 0 || mem.none);
     activeTags.textContent = '';
-    activeTags.hidden = !mem.tags.length;
+    activeTags.hidden = !mem.tags.length && !mem.none;
+    if (mem.none && !mem.tags.length) activeTags.appendChild(el('button', {
+      type: 'button', class: 'tag tag-removable', title: 'Togli il filtro «Senza tag»', 'aria-label': 'Togli il filtro Senza tag',
+      on: { click: () => { mem.none = false; draw(); } },
+    }, 'Senza tag', icon('close')));
     mem.tags.forEach(t => activeTags.appendChild(el('button', {
       type: 'button', class: 'tag tag-removable', title: 'Togli il filtro «' + t + '»', 'aria-label': 'Togli il filtro ' + t,
       on: { click: () => { mem.tags = mem.tags.filter(x => x !== t); draw(); } },
@@ -279,14 +289,14 @@ export async function render(ctx) {
   function draw() {
     clear.hidden = !mem.q;
     updateFilter();
-    const filtered = withTags && mem.tags.length > 0;
-    const list = sortFilms(filterByTags(searchFilms(all, mem.q), withTags ? mem.tags : [], mem.all), stato, sort);
+    const filtered = withTags && (mem.tags.length > 0 || mem.none);
+    const list = sortFilms(filterByTags(searchFilms(all, mem.q), withTags ? mem.tags : [], mem.all, withTags && mem.none), stato, sort);
     count.textContent = mem.q || filtered
       ? (list.length === 1 ? '1 film trovato' : list.length + ' film trovati') + ' su ' + all.length
       : (all.length === 1 ? '1 film' : all.length + ' film');
     box.textContent = '';
     if (!list.length) {
-      box.appendChild(el('p', { class: 'empty', text: filtered ? 'Nessun film con questi tag' + (mem.q ? ' e questo titolo.' : '.') : 'Nessun film con questo titolo.' }));
+      box.appendChild(el('p', { class: 'empty', text: filtered ? (mem.tags.length ? 'Nessun film con questi tag' : 'Nessun film senza tag') + (mem.q ? ' e questo titolo.' : '.') : 'Nessun film con questo titolo.' }));
       return;
     }
     const href = f => '#/film/' + f.id;
