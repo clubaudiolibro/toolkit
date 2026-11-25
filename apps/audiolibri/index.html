@@ -192,11 +192,13 @@ select.mini,input.mini{border:1px solid var(--border);background:var(--surface);
 .af button{border:0;background:transparent;cursor:pointer;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;color:var(--muted)}
 .af button:hover{background:var(--surface-2);color:var(--text)}
 .result-count{font-size:.84rem;color:var(--muted);margin-left:auto}
-.filters-toggle{display:none}
-@media (max-width:760px){
-  .filters-toggle{display:inline-flex}
-  .filters.collapsed .filters-grid{display:none}
-}
+.filters.collapsed .filters-grid{display:none}
+.filters-toggle{display:inline-flex;align-items:center;gap:4px;border:0;background:transparent;padding:.2em .1em;font:inherit;font-size:.86rem;font-weight:700;color:var(--muted);cursor:pointer;border-radius:8px}
+.filters-toggle:hover{color:var(--text)}
+.filters-toggle svg{width:14px;height:14px;transition:transform .15s}
+.filters-toggle[aria-expanded="true"] svg{transform:rotate(180deg)}
+.filters.collapsed{background:transparent;border:0;box-shadow:none;padding:0;margin-top:12px}
+.filters.collapsed .active-filters:empty{display:none}
 
 /* ---------- KPI ---------- */
 .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--gap)}
@@ -510,10 +512,9 @@ footer.app-footer{border-top:0}
 
     <div id="import-notices"></div>
 
-    <section class="filters" id="filters" aria-label="Filtri">
+    <section class="filters collapsed" id="filters" aria-label="Filtri">
       <div class="filters-top">
-        <button class="btn sm filters-toggle" id="filters-toggle" type="button" aria-expanded="false" aria-controls="filters-grid">Filtri</button>
-        <div class="quick" id="quick-filters" role="group" aria-label="Filtri rapidi"></div>
+        <button class="filters-toggle" id="filters-toggle" type="button" aria-expanded="false" aria-controls="filters-grid"><span id="filters-toggle-label">Filtri</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
         <span class="result-count" id="result-count" aria-live="polite"></span>
       </div>
       <div class="filters-grid" id="filters-grid"></div>
@@ -1137,21 +1138,6 @@ function resetFilters() { S.filters = emptyFilters(); S.quick = null; syncFilter
 function referenceDate() {
   if (S.prefs.refDate === "max") { const ds = S.data.records.filter(r => r.completion.precision === "day").map(r => r.completion.date); if (ds.length) return new Date(Math.max(...ds)); }
   return stripTime(new Date());
-}
-const QUICK = [
-  { key: "all", label: "Tutto", apply: () => {} },
-  { key: "year", label: "Anno corrente", apply: f => f.years.add(String(new Date().getFullYear())) },
-  { key: "12m", label: "Ultimi 12 mesi", apply: f => { const ref = referenceDate(); const from = new Date(ref.getFullYear() - 1, ref.getMonth(), ref.getDate() + 1); f.dateFrom = from; f.dateTo = ref; } },
-  { key: "listened", label: "Ascoltati", apply: f => f.status.add("listened") },
-  { key: "listening", label: "In ascolto", apply: f => f.status.add("listening") },
-  { key: "possible", label: "Possibili ascolti", apply: f => f.status.add("possible") },
-  { key: "r4", label: "Voto ≥ 4", apply: f => { f.ratingMin = 4; } },
-  { key: "d20", label: "Durata > 20 h", apply: f => { f.durMin = 20; } }
-];
-function applyQuick(k) {
-  S.filters = emptyFilters();
-  const q = QUICK.find(x => x.key === k); q.apply(S.filters); S.quick = k === "all" ? null : k;
-  syncFilterUI(); scheduleRefresh();
 }
 
 function serializeFilters(f) { const o = {}; for (const [k, v] of Object.entries(f)) o[k] = v instanceof Set ? [...v] : v instanceof Date ? v.toISOString() : v; return o; }
@@ -1969,7 +1955,6 @@ function renderKPIs({ F, L }) {
    UI DEI FILTRI
    --------------------------------------------------------------------- */
 function buildFilterUI() {
-  $("#quick-filters").innerHTML = QUICK.map(q => `<button class="chip" type="button" data-quick="${q.key}" aria-pressed="false" ${q.key === "12m" ? `title="Calcolato rispetto a: ${S.prefs.refDate === "max" ? "data più recente nel dataset" : "data odierna del browser"}"` : ""}>${q.label}</button>`).join("");
   const parts = [];
   if (hasField("endDate")) parts.push(`<div class="f-field"><span class="lbl" id="lbl-period">Periodo (fine ascolto)</span><div class="range-pair"><input type="date" id="f-from" aria-label="Dal"><span>–</span><input type="date" id="f-to" aria-label="Al"></div></div>`);
   for (const d of MULTI_FILTERS) {
@@ -2010,8 +1995,7 @@ function syncFilterUI() {
   set("#f-from", toInputDate(f.dateFrom)); set("#f-to", toInputDate(f.dateTo));
   set("#f-rmin", f.ratingMin ?? ""); set("#f-rmax", f.ratingMax ?? ""); set("#f-dmin", f.durMin != null ? +f.durMin.toFixed(2) : ""); set("#f-dmax", f.durMax != null ? +f.durMax.toFixed(2) : "");
   const none = activeFilterCount() === 0;
-  $$("#quick-filters .chip").forEach(c => c.setAttribute("aria-pressed", String(c.dataset.quick === "all" ? none : c.dataset.quick === S.quick)));
-  const tg = $("#filters-toggle"); if (tg) tg.textContent = `Filtri${none ? "" : " (" + activeFilterCount() + ")"}`;
+  const tg = $("#filters-toggle-label"); if (tg) tg.textContent = `Filtri${none ? "" : " (" + activeFilterCount() + ")"}`;
   renderActiveFilters();
 }
 function renderActiveFilters() {
@@ -2421,7 +2405,6 @@ function bindEvents() {
     const png = t.closest("[data-png]"); if (png) { exportChartPNG(png.dataset.png); return; }
     const clr = t.closest("[data-clear]"); if (clr) { clearDims(CARD[clr.dataset.clear].filterKeys); return; }
     const cdim = t.closest("[data-clear-dim]"); if (cdim) { clearDims([cdim.dataset.clearDim]); return; }
-    const q = t.closest("[data-quick]"); if (q) { applyQuick(q.dataset.quick); return; }
     const sg = t.closest(".seg[data-ui] button"); if (sg) { const k = sg.parentElement.dataset.ui; S.ui[k] = sg.dataset.v; syncSegs(); scheduleRefresh(); return; }
     const my = t.closest("[data-month-year]"); if (my) { const y = +my.dataset.monthYear; const a = new Set(S.ui.monthYears || []); a.has(y) ? a.delete(y) : a.add(y); S.ui.monthYears = [...a].sort(); if (!S.ui.monthYears.length) S.ui.monthYears = [y]; scheduleRefresh(); return; }
     const pr = t.closest("[data-preset]"); if (pr) { const P = S.ui.period, ref = referenceDate(); const k = pr.dataset.preset;
