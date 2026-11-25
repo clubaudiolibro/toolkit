@@ -30,7 +30,7 @@ const APPS = [
     description: "Analizza il tuo archivio di audiolibri con statistiche, grafici, filtri e indicatori.",
     url: "./apps/audiolibri/index.html",
     category: "audiolibri",
-    version: "1.3",
+    version: "1.4",
     tags: ["Notion · cloud", "Grafici", "Filtri"],
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg>'
   },
@@ -93,6 +93,7 @@ const APPS = [
           version, text (descrizione brevissima).
    ===================================================================== */
 const CHANGELOG = [
+  { date: "2026-11-25", app: "audiolibri", version: "1.4", text: "Filtri molto più compatti: resta solo la voce «Filtri», che al tocco apre i controlli; tolti i pulsanti con i filtri predefiniti (Tutto, Anno corrente, ecc.)." },
   { date: "2026-11-24", app: "filmshelf", version: "1.8", text: "Filtro «Tag» in Visti: premendo «Applica» senza scegliere alcun tag si vedono i film senza tag («Azzera» toglie il filtro)." },
   { date: "2026-11-22", app: "toolbox", version: "3.1", text: "Nuova sezione «Backup e ripristino» in home: «Esporta tutto» crea un unico file .zip con i dati di GymLog, FilmShelf, TabShelf (file delle tablature compresi) e le impostazioni di Diario, Citazioni e Postcard; «Ripristina…» lo rilegge scegliendo cosa recuperare, con controlli preliminari (spazio incluso) e copia di sicurezza di ciò che verrebbe sostituito. FilmShelf e TabShelf vengono solo integrati: niente viene cancellato." },
   { date: "2026-11-22", app: "filmshelf", version: "1.7", text: "«Dove» diventa «Tag»: nel modulo Visto il «+» crea nuovi tag; nuova sezione Statistiche «Film visti per tag»; in Visti il pulsante «Tag» filtra per uno o più tag. Richiede di rieseguire supabase/filmshelf.sql (schema 2)." },
