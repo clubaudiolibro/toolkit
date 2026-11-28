@@ -1068,7 +1068,13 @@ $('exportCsv').addEventListener('click', () => {
 
 /* ================= download ================= */
 function ext() { return S.fmt === 'jpeg' ? 'jpg' : 'png'; }
-function fileName(i) { return String(i + 1).padStart(2, '0') + '-' + slug(items[i].t) + '-' + slug(items[i].a).slice(0, 20) + '.' + ext(); }
+/* Nome file: «XX_Titolo Libro - Nome Autore.ext». XX = numero di riga del file caricato (la prima citazione è 1);
+   titolo e autore restano come scritti nel file, tolti solo i caratteri non ammessi nei nomi file. */
+function cleanName(s) { return String(s).replace(/[\\\/:*?"<>|\u0000-\u001f]/g, '').replace(/\s+/g, ' ').trim().replace(/\.+$/, ''); }
+function fileName(i) {
+  const it = items[i];
+  return String(it.n || i + 1).padStart(2, '0') + '_' + (cleanName(it.t) || 'Senza titolo') + ' - ' + (cleanName(it.a) || 'Autore sconosciuto') + '.' + ext();
+}
 function saveBlob(blob, name) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
@@ -1237,7 +1243,7 @@ function loadRows(rows, fileName) {
   const ti = col(/titol|title|libro|book/, 0), ai = col(/autor|author/, 1), qi = col(/citaz|quote|testo|text/, 2);
   const ci = head.findIndex(h => /creat|fatt|done/.test(h));   // colonna facoltativa: se manca, tutte da creare
   const isDone = v => /^(si|sì|s|yes|y|true|vero|1|x)$/i.test(String(v || '').trim());
-  const out = rows.slice(1).map(r => ({ t: (r[ti] || '').trim(), a: (r[ai] || '').trim(), q: (r[qi] || '').trim(), c: ci >= 0 && isDone(r[ci]) })).filter(x => x.q);
+  const out = rows.slice(1).map((r, k) => ({ n: k + 1, t: (r[ti] || '').trim(), a: (r[ai] || '').trim(), q: (r[qi] || '').trim(), c: ci >= 0 && isDone(r[ci]) })).filter(x => x.q);
   if (!out.length) { $('csvMsg').textContent = 'Non ho trovato la colonna Citazione.'; return; }
   items = out; checked = new Set(); items.forEach((it, i) => { if (!it.c) checked.add(i); }); current = 0; fixCurrent(); filter = ''; $('search').value = '';
   const books = new Set(items.map(i => bookKey(i.t)));

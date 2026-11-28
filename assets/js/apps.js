@@ -40,7 +40,7 @@ const APPS = [
     description: "Trasforma le citazioni dei tuoi libri in immagini personalizzate pronte da condividere.",
     url: "./apps/citazioni/index.html",
     category: "audiolibri",
-    version: "1.3",
+    version: "1.4",
     tags: ["CSV / Excel", "PNG / JPG", "ZIP"],
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 11H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v6c0 2.5-1.5 4-4 4.5"/><path d="M19 11h-4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v6c0 2.5-1.5 4-4 4.5"/></svg>'
   },
@@ -93,6 +93,7 @@ const APPS = [
           version, text (descrizione brevissima).
    ===================================================================== */
 const CHANGELOG = [
+  { date: "2026-11-28", app: "citazioni", version: "1.4", text: "Nome dei file esportati nel formato «XX_Titolo Libro - Nome Autore»: maiuscole come nel file caricato e XX = numero di riga (la prima citazione è 1)." },
   { date: "2026-11-25", app: "audiolibri", version: "1.4", text: "Filtri molto più compatti: resta solo la voce «Filtri», che al tocco apre i controlli; tolti i pulsanti con i filtri predefiniti (Tutto, Anno corrente, ecc.)." },
   { date: "2026-11-24", app: "filmshelf", version: "1.8", text: "Filtro «Tag» in Visti: premendo «Applica» senza scegliere alcun tag si vedono i film senza tag («Azzera» toglie il filtro)." },
   { date: "2026-11-22", app: "toolbox", version: "3.1", text: "Nuova sezione «Backup e ripristino» in home: «Esporta tutto» crea un unico file .zip con i dati di GymLog, FilmShelf, TabShelf (file delle tablature compresi) e le impostazioni di Diario, Citazioni e Postcard; «Ripristina…» lo rilegge scegliendo cosa recuperare, con controlli preliminari (spazio incluso) e copia di sicurezza di ciò che verrebbe sostituito. FilmShelf e TabShelf vengono solo integrati: niente viene cancellato." },
